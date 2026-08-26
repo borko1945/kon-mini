@@ -25,7 +25,7 @@ class ApiType(Enum):
 
 @dataclass
 class Model:
-    id: str  # Model ID (e.g., "glm-5.1", "claude-opus-4.6")
+    id: str  # Model ID (e.g., "glm-5.3", "claude-opus-4.6")
     provider: str  # "openai", "zhipu", "github-copilot", "openai-codex"
     api: ApiType  # Which API format to use
     base_url: str  # API endpoint
@@ -39,24 +39,25 @@ class Model:
 
 MODELS: dict[str, Model] = {
     # ZhiPu models
-    "glm-5.1": Model(
-        id="glm-5.1",
+    "glm-5.3": Model(
+        id="glm-5.3",
         provider="zhipu",
         api=ApiType.OPENAI_COMPLETIONS,
         base_url="https://api.z.ai/api/coding/paas/v4",
-        max_tokens=8192,
-        supports_images=True,
+        max_tokens=131072,
+        supports_images=False,
         supports_thinking=True,
+        context_window=1000000,
     ),
-    "glm-5.2": Model(
-        id="glm-5.2",
+    "glm-5.3-flash": Model(
+        id="glm-5.3-flash",
         provider="zhipu",
         api=ApiType.OPENAI_COMPLETIONS,
         base_url="https://api.z.ai/api/coding/paas/v4",
-        max_tokens=65536,
+        max_tokens=131072,
         supports_images=True,
         supports_thinking=True,
-        context_window=131072,
+        context_window=1000000,
     ),
     # DeepSeek models (OpenAI-compatible Chat Completions API)
     "deepseek-v4-flash": Model(
@@ -64,22 +65,24 @@ MODELS: dict[str, Model] = {
         provider="deepseek",
         api=ApiType.OPENAI_COMPLETIONS,
         base_url="https://api.deepseek.com",
-        max_tokens=8192,
+        max_tokens=384000,
         supports_images=False,
         supports_thinking=True,
+        context_window=1000000,
     ),
     "deepseek-v4-pro": Model(
         id="deepseek-v4-pro",
         provider="deepseek",
         api=ApiType.OPENAI_COMPLETIONS,
         base_url="https://api.deepseek.com",
-        max_tokens=8192,
+        max_tokens=384000,
         supports_images=False,
         supports_thinking=True,
+        context_window=1000000,
     ),
     # xAI models (Grok/X subscription OAuth via Responses API)
-    "grok-4.5": Model(
-        id="grok-4.5",
+    "grok-4.6": Model(
+        id="grok-4.6",
         provider="xai",
         api=ApiType.XAI_RESPONSES,
         base_url="https://api.x.ai/v1",

@@ -28,6 +28,19 @@ def test_detect_compat_disables_developer_role_for_local_api() -> None:
     assert compat.supports_reasoning_effort is True
 
 
+def test_detect_compat_maps_glm_5_3_reasoning_effort() -> None:
+    compat = _detect_compat("zhipu", "https://api.z.ai/api/coding/paas/v4", "glm-5.3-flash")
+
+    assert compat.thinking_format == "zai"
+    assert compat.reasoning_effort_map == {
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+    }
+
+
 def test_detect_compat_uses_llama_gemma_for_local_gemma_models() -> None:
     compat = _detect_compat(
         "openai", "http://127.0.0.1:1234/v1", "unsloth/gemma-4-26B-A4B-it-GGUF"

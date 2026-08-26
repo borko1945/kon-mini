@@ -558,7 +558,7 @@ kon --provider deepseek --model deepseek-v4-flash
 After signing in to xAI via `/login`, launch Grok with:
 
 ```bash
-kon --provider xai --model grok-4.5
+kon --provider xai --model grok-4.6
 ```
 
 ### Local models

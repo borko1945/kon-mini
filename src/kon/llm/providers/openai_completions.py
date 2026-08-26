@@ -44,9 +44,15 @@ from ..base import (
 from .openai_compat import supports_developer_role
 from .sanitize import sanitize_surrogates
 
-# Default reasoning effort map for models that only accept "high" and "max".
-# Low/medium map to "high", xhigh maps to "max".
-_ZAI_EFFORT_MAP_HIGH_MAX: dict[str, str] = {
+# Reasoning effort maps for providers with restricted effort vocabularies.
+_EFFORT_MAP_LOW_HIGH_MAX: dict[str, str] = {
+    "minimal": "low",
+    "low": "low",
+    "medium": "high",
+    "high": "high",
+    "xhigh": "max",
+}
+_EFFORT_MAP_HIGH_MAX: dict[str, str] = {
     "minimal": "high",
     "low": "high",
     "medium": "high",
@@ -81,9 +87,10 @@ def _detect_compat(provider: str, base_url: str, model: str = "") -> OpenAICompl
 
     if is_zai:
         reasoning_effort_map: dict[str, str] = {}
-        # GLM-5.2 only supports "high" and "max" thinking effort levels
-        if "glm-5.2" in normalized_model:
-            reasoning_effort_map = dict(_ZAI_EFFORT_MAP_HIGH_MAX)
+        if "glm-5.3" in normalized_model:
+            reasoning_effort_map = dict(_EFFORT_MAP_LOW_HIGH_MAX)
+        elif "glm-5.2" in normalized_model:
+            reasoning_effort_map = dict(_EFFORT_MAP_HIGH_MAX)
 
         return OpenAICompletionsCompat(
             supports_store=False,

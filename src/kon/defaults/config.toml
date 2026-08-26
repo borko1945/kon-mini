@@ -97,4 +97,4 @@ volume = 0.5
 # Example: xAI Grok provider
 # Sign in with SuperGrok or X Premium via /login, then set in [llm]:
 # default_provider = "xai"
-# default_model = "grok-4.5"
+# default_model = "grok-4.6"

@@ -11,7 +11,7 @@ from kon.llm.providers.xai_responses import XaiResponsesProvider
 def test_xai_responses_uses_xai_request_fields() -> None:
     provider = XaiResponsesProvider(
         ProviderConfig(
-            model="grok-4.5",
+            model="grok-4.6",
             provider="xai",
             base_url="https://api.x.ai/v1",
             thinking_level="medium",
@@ -54,7 +54,7 @@ async def test_xai_provider_uses_oauth_token(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr("kon.llm.providers.xai_responses.AsyncOpenAI", FakeClient)
     provider = XaiResponsesProvider(
         ProviderConfig(
-            model="grok-4.5",
+            model="grok-4.6",
             provider="xai",
             base_url="https://api.x.ai/v1",
             thinking_level="low",
@@ -66,4 +66,4 @@ async def test_xai_provider_uses_oauth_token(monkeypatch: pytest.MonkeyPatch) ->
 
     assert captured["client"]["api_key"] == "oauth-token"
     assert captured["client"]["default_headers"] == {"session_id": "session-123"}
-    assert captured["params"]["model"] == "grok-4.5"
+    assert captured["params"]["model"] == "grok-4.6"
