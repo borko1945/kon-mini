@@ -66,7 +66,7 @@ def shorten_path(path: str) -> str:
     home = Path(os.path.expanduser("~")).as_posix()
     path_posix = Path(path).as_posix()
     if path_posix.startswith(home):
-        return "~" + path_posix[len(home):]
+        return "~" + path_posix[len(home) :]
     return path
 
 
