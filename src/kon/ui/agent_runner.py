@@ -52,6 +52,7 @@ class AgentRunnerMixin:
     _interrupt_requested: bool
     _abort_shown: bool
     _current_block_type: str | None
+    _stream_started: bool
     _hide_thinking: bool
     _approval_future: asyncio.Future[ApprovalResponse] | None
     _approval_tool_id: str | None
@@ -101,7 +102,9 @@ class AgentRunnerMixin:
         agent = self._runtime.prepare_for_run()
         if agent is None:
             chat.add_info_message("Agent not initialized")
+            status.set_status("idle")
             self._is_running = False
+            self._show_pending_update_notice_if_idle()
             return
         current_prompt = prompt
         current_images = images
@@ -116,8 +119,9 @@ class AgentRunnerMixin:
             if self._interrupt_requested:
                 self._cancel_event.set()
 
-            # Status stays "waiting" (set synchronously at submit) until the
-            # first streamed delta arrives; _render_agent_event promotes it.
+            # Queued prompts also need a waiting state because they bypass the
+            # input submission handler when their run begins.
+            status.set_status("waiting")
             self._stream_started = False
 
             try:
@@ -232,6 +236,7 @@ class AgentRunnerMixin:
                 pass
 
             case ToolStartEvent(tool_call_id=id, tool_name=name):
+                self._promote_to_working(status)
                 if self._current_block_type:
                     chat.end_block()
                 tool = get_tool(name)

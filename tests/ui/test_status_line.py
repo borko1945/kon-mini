@@ -31,6 +31,15 @@ def test_status_line_interrupt_hint_bolds_esc():
     assert esc_style.bold is True
 
 
+def test_status_line_renders_waiting_for_model_message():
+    status = StatusLine()
+    status._status = "waiting"
+
+    rendered = status._render_spinner()
+
+    assert rendered.plain.endswith(" Sent — waiting for model... (esc to interrupt)")
+
+
 def test_status_line_formats_without_turn_tps(monkeypatch):
     status = StatusLine()
     status._start_time = 100.0
