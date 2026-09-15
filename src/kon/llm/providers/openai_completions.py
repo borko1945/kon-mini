@@ -149,8 +149,9 @@ class OpenAICompletionsProvider(BaseProvider):
             auth_mode=config.openai_compat_auth_mode,
         )
         if not api_key:
+            provider_name = config.provider or self.name
             raise ValueError(
-                f"No API key found for {self.name}. "
+                f"No API key found for {provider_name}. "
                 "Set OPENAI_API_KEY, DEEPSEEK_API_KEY, ZAI_API_KEY, or OPENROUTER_API_KEY "
                 "environment variable, "
                 'or configure llm.auth.openai_compat = "auto"/"none" for local endpoints.'

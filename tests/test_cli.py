@@ -13,8 +13,9 @@ def test_bare_prompt_flag_means_stdin():
     assert build_parser().parse_args(["-p"]).prompt == "-"
 
 
-def test_provider_uses_long_form():
-    assert build_parser().parse_args(["--provider", "openai"]).provider == "openai"
+@pytest.mark.parametrize("provider", ["openai", "openrouter"])
+def test_provider_uses_long_form(provider):
+    assert build_parser().parse_args(["--provider", provider]).provider == provider
 
 
 def test_prompt_no_longer_feeds_provider():
