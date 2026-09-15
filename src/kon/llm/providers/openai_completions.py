@@ -44,14 +44,29 @@ from ..base import (
 from .openai_compat import supports_developer_role
 from .sanitize import sanitize_surrogates
 
-# Default reasoning effort map for models that only accept "high" and "max".
-# Low/medium map to "high", xhigh maps to "max".
-_ZAI_EFFORT_MAP_HIGH_MAX: dict[str, str] = {
+# Reasoning effort maps for providers with restricted effort vocabularies.
+_EFFORT_MAP_LOW_HIGH_MAX: dict[str, str] = {
+    "minimal": "low",
+    "low": "low",
+    "medium": "high",
+    "high": "high",
+    "xhigh": "max",
+}
+_EFFORT_MAP_HIGH_MAX: dict[str, str] = {
     "minimal": "high",
     "low": "high",
     "medium": "high",
     "high": "high",
     "xhigh": "max",
+}
+_EFFORT_MAP_DEEPSEEK: dict[str, str] = {
+    "minimal": "low",
+    "low": "low",
+    "medium": "high",
+    "high": "high",
+    "xhigh": "high",
+    "max": "max",
+    "ultra": "max",
 }
 
 
@@ -61,10 +76,9 @@ class OpenAICompletionsCompat:
     supports_developer_role: bool = True
     supports_reasoning_effort: bool = True
     max_tokens_field: Literal["max_tokens", "max_completion_tokens"] = "max_completion_tokens"
-    thinking_format: Literal["openai", "zai", "qwen", "llama_gemma"] = "openai"
+    thinking_format: Literal["openai", "zai", "deepseek", "qwen", "llama_gemma"] = "openai"
     # Per-model reasoning effort map. When set, the provider maps Kon's thinking
     # levels to the model's effort vocabulary (e.g. "xhigh" -> "max").
-    # Only used when thinking_format is "zai" and the model supports effort levels.
     reasoning_effort_map: dict[str, str] = field(default_factory=dict)
 
 
@@ -81,9 +95,10 @@ def _detect_compat(provider: str, base_url: str, model: str = "") -> OpenAICompl
 
     if is_zai:
         reasoning_effort_map: dict[str, str] = {}
-        # GLM-5.2 only supports "high" and "max" thinking effort levels
-        if "glm-5.2" in normalized_model:
-            reasoning_effort_map = dict(_ZAI_EFFORT_MAP_HIGH_MAX)
+        if "glm-5.3" in normalized_model:
+            reasoning_effort_map = dict(_EFFORT_MAP_LOW_HIGH_MAX)
+        elif "glm-5.2" in normalized_model:
+            reasoning_effort_map = dict(_EFFORT_MAP_HIGH_MAX)
 
         return OpenAICompletionsCompat(
             supports_store=False,
@@ -95,7 +110,11 @@ def _detect_compat(provider: str, base_url: str, model: str = "") -> OpenAICompl
 
     if is_deepseek:
         return OpenAICompletionsCompat(
-            supports_store=False, supports_developer_role=False, supports_reasoning_effort=False
+            supports_store=False,
+            supports_developer_role=False,
+            supports_reasoning_effort=False,
+            thinking_format="deepseek",
+            reasoning_effort_map=dict(_EFFORT_MAP_DEEPSEEK),
         )
 
     if is_local_base_url(base_url) and "gemma" in normalized_model:
@@ -208,6 +227,13 @@ class OpenAICompletionsProvider(BaseProvider):
                     mapped_effort = compat.reasoning_effort_map.get(thinking_level)
                     if mapped_effort:
                         create_kwargs["reasoning_effort"] = mapped_effort
+        elif compat.thinking_format == "deepseek":
+            thinking_enabled = bool(thinking_level and thinking_level != "none")
+            extra_body["thinking"] = {"type": "enabled" if thinking_enabled else "disabled"}
+            if thinking_enabled:
+                mapped_effort = compat.reasoning_effort_map.get(thinking_level)
+                if mapped_effort:
+                    create_kwargs["reasoning_effort"] = mapped_effort
         elif compat.thinking_format in {"qwen", "llama_gemma"}:
             extra_body["enable_thinking"] = bool(thinking_level and thinking_level != "none")
         elif (

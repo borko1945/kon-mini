@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -58,6 +59,8 @@ class FindTool(BaseTool):
         if not os.path.isabs(search_path):
             search_path = os.path.join(os.getcwd(), search_path)
 
+        search_path_posix = Path(search_path).as_posix()
+
         if not os.path.exists(search_path):
             msg = f"Path not found: {search_path}"
             return ToolResult(success=False, result=msg, ui_summary=f"[red]{msg}[/red]")
@@ -102,8 +105,8 @@ class FindTool(BaseTool):
         # Relativize and collect mtime for sorting
         files: list[tuple[str, float]] = []
         for line in lines:
-            if line.startswith(search_path):
-                rel = line[len(search_path) :].lstrip(os.sep)
+            if line.startswith(search_path_posix):
+                rel = line[len(search_path_posix) :].lstrip(os.sep).lstrip("/")
                 rel = rel if rel else line
             else:
                 rel = os.path.relpath(line, search_path)

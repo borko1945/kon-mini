@@ -28,6 +28,34 @@ def test_detect_compat_disables_developer_role_for_local_api() -> None:
     assert compat.supports_reasoning_effort is True
 
 
+def test_detect_compat_maps_glm_5_3_reasoning_effort() -> None:
+    compat = _detect_compat("zhipu", "https://api.z.ai/api/coding/paas/v4", "glm-5.3-flash")
+
+    assert compat.thinking_format == "zai"
+    assert compat.reasoning_effort_map == {
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "max",
+    }
+
+
+def test_detect_compat_maps_deepseek_reasoning_effort() -> None:
+    compat = _detect_compat("deepseek", "https://api.deepseek.com", "deepseek-flash")
+
+    assert compat.thinking_format == "deepseek"
+    assert compat.reasoning_effort_map == {
+        "minimal": "low",
+        "low": "low",
+        "medium": "high",
+        "high": "high",
+        "xhigh": "high",
+        "max": "max",
+        "ultra": "max",
+    }
+
+
 def test_detect_compat_uses_llama_gemma_for_local_gemma_models() -> None:
     compat = _detect_compat(
         "openai", "http://127.0.0.1:1234/v1", "unsloth/gemma-4-26B-A4B-it-GGUF"
@@ -131,6 +159,46 @@ async def test_openai_completions_sends_enable_thinking_for_local_gemma() -> Non
     assert kwargs["extra_body"] == {"enable_thinking": True}
     assert "reasoning_effort" not in kwargs
     assert kwargs["messages"][0]["content"] == "<|think|>You are helpful"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("thinking_level", "thinking_type", "reasoning_effort"),
+    [
+        ("none", "disabled", None),
+        ("medium", "enabled", "high"),
+        ("xhigh", "enabled", "high"),
+        ("max", "enabled", "max"),
+    ],
+)
+async def test_openai_completions_configures_deepseek_thinking(
+    thinking_level: str, thinking_type: str, reasoning_effort: str | None
+) -> None:
+    provider = OpenAICompletionsProvider(
+        ProviderConfig(
+            api_key="test-key",
+            base_url="https://api.deepseek.com",
+            model="deepseek-flash",
+            provider="deepseek",
+            thinking_level=thinking_level,
+        )
+    )
+    dummy_chat = _DummyChatCompletions()
+    provider._client = cast(
+        Any,
+        type("DummyClient", (), {"chat": type("DummyChat", (), {"completions": dummy_chat})()})(),
+    )
+
+    stream = await provider._stream_impl(messages=[])
+    async for _ in stream:
+        pass
+
+    kwargs = dummy_chat.calls[0]
+    assert kwargs["extra_body"] == {"thinking": {"type": thinking_type}}
+    if reasoning_effort is None:
+        assert "reasoning_effort" not in kwargs
+    else:
+        assert kwargs["reasoning_effort"] == reasoning_effort
 
 
 def test_openai_responses_uses_system_for_local_api() -> None:
