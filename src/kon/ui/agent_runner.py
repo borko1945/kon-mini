@@ -52,6 +52,7 @@ class AgentRunnerMixin:
     _interrupt_requested: bool
     _abort_shown: bool
     _current_block_type: str | None
+    _stream_started: bool
     _hide_thinking: bool
     _approval_future: asyncio.Future[ApprovalResponse] | None
     _approval_tool_id: str | None
@@ -101,7 +102,9 @@ class AgentRunnerMixin:
         agent = self._runtime.prepare_for_run()
         if agent is None:
             chat.add_info_message("Agent not initialized")
+            status.set_status("idle")
             self._is_running = False
+            self._show_pending_update_notice_if_idle()
             return
         current_prompt = prompt
         current_images = images
@@ -116,7 +119,10 @@ class AgentRunnerMixin:
             if self._interrupt_requested:
                 self._cancel_event.set()
 
-            status.set_status("working")
+            # Queued prompts also need a waiting state because they bypass the
+            # input submission handler when their run begins.
+            status.set_status("waiting")
+            self._stream_started = False
 
             try:
                 async for event in agent.run(
@@ -179,6 +185,13 @@ class AgentRunnerMixin:
         self._update_queue_display()
         return _unpack_queue_item(queued)
 
+    def _promote_to_working(self, status: StatusLine) -> None:
+        """Switch from 'waiting' to 'working' once the model starts streaming."""
+        if self._stream_started:
+            return
+        self._stream_started = True
+        status.set_status("working")
+
     async def _render_agent_event(
         self, event: object, chat: ChatLog, status: StatusLine, info_bar: InfoBar
     ) -> bool:
@@ -202,6 +215,7 @@ class AgentRunnerMixin:
                     self._current_block_type = "thinking"
 
             case ThinkingDeltaEvent(delta=d):
+                self._promote_to_working(status)
                 await chat.append_to_current(d)
 
             case ThinkingEndEvent():
@@ -215,12 +229,14 @@ class AgentRunnerMixin:
                     self._current_block_type = "content"
 
             case TextDeltaEvent(delta=d):
+                self._promote_to_working(status)
                 await chat.append_to_current(d)
 
             case TextEndEvent():
                 pass
 
             case ToolStartEvent(tool_call_id=id, tool_name=name):
+                self._promote_to_working(status)
                 if self._current_block_type:
                     chat.end_block()
                 tool = get_tool(name)
