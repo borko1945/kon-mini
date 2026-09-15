@@ -42,12 +42,13 @@ def test_get_model_prefers_provider_for_gpt_5_5():
 
 
 def test_get_model_resolves_deepseek_models():
-    model = get_model("deepseek-v4-flash", "deepseek")
+    model = get_model("deepseek-flash", "deepseek")
 
     assert model is not None
     assert model.provider == "deepseek"
     assert model.context_window == 1000000
     assert model.max_tokens == 384000
+    assert model.supports_images is True
 
 
 def test_get_model_resolves_grok_4_6():

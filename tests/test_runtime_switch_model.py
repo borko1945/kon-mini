@@ -88,7 +88,7 @@ def test_switch_model_recreates_provider_when_openai_compatible_base_url_changes
         )
     )
     runtime = _runtime_with_provider(initial_provider)
-    target = get_model("deepseek-v4-flash", "deepseek")
+    target = get_model("deepseek-flash", "deepseek")
     assert target is not None
 
     created_configs: list[ProviderConfig] = []
@@ -107,8 +107,8 @@ def test_switch_model_recreates_provider_when_openai_compatible_base_url_changes
     assert runtime.provider is not None
     assert runtime.provider.config.provider == "deepseek"
     assert runtime.provider.config.base_url == "https://api.deepseek.com"
-    assert runtime.provider.config.model == "deepseek-v4-flash"
-    assert runtime.model == "deepseek-v4-flash"
+    assert runtime.provider.config.model == "deepseek-flash"
+    assert runtime.model == "deepseek-flash"
     assert runtime.model_provider == "deepseek"
 
 
@@ -119,7 +119,7 @@ def test_switch_model_reuses_provider_when_openai_compatible_base_url_is_unchang
         )
     )
     runtime = _runtime_with_provider(initial_provider)
-    target = get_model("deepseek-v4-flash", "deepseek")
+    target = get_model("deepseek-flash", "deepseek")
     assert target is not None
 
     def fail_create_provider(api_type: ApiType, config: ProviderConfig) -> BaseProvider:
@@ -134,7 +134,7 @@ def test_switch_model_reuses_provider_when_openai_compatible_base_url_is_unchang
     assert provider is not None
     assert provider.config.provider == "deepseek"
     assert provider.config.base_url == "https://api.deepseek.com"
-    assert provider.config.model == "deepseek-v4-flash"
+    assert provider.config.model == "deepseek-flash"
 
 
 def test_switch_model_uses_default_provider_base_url_override(monkeypatch):
@@ -148,7 +148,7 @@ def test_switch_model_uses_default_provider_base_url_override(monkeypatch):
         )
     )
     runtime = _runtime_with_provider(initial_provider)
-    target = get_model("deepseek-v4-flash", "deepseek")
+    target = get_model("deepseek-flash", "deepseek")
     assert target is not None
 
     created_configs: list[ProviderConfig] = []
@@ -172,7 +172,7 @@ def test_switch_model_explicit_base_url_wins(monkeypatch):
     monkeypatch.setattr(kon_config.llm, "default_base_url", "https://proxy.example.com/v1")
     initial_provider = _FakeProvider(
         ProviderConfig(
-            provider="deepseek", base_url="http://localhost:11434/v1", model="deepseek-v4-flash"
+            provider="deepseek", base_url="http://localhost:11434/v1", model="deepseek-flash"
         )
     )
     runtime = ConversationRuntime(
@@ -216,7 +216,7 @@ def test_switch_model_creates_provider_when_provider_is_none(monkeypatch):
     )
     assert runtime.provider is None
 
-    target = get_model("deepseek-v4-flash", "deepseek")
+    target = get_model("deepseek-flash", "deepseek")
     assert target is not None
 
     created: list[ProviderConfig] = []
@@ -232,9 +232,9 @@ def test_switch_model_creates_provider_when_provider_is_none(monkeypatch):
 
     assert len(created) == 1
     assert runtime.provider is not None
-    assert runtime.provider.config.model == "deepseek-v4-flash"
+    assert runtime.provider.config.model == "deepseek-flash"
     assert runtime.provider.config.provider == "deepseek"
-    assert runtime.model == "deepseek-v4-flash"
+    assert runtime.model == "deepseek-flash"
     assert runtime.model_provider == "deepseek"
 
 
@@ -279,7 +279,7 @@ def test_load_session_reuses_provider_when_runtime_provider_unknown_and_apis_mat
 ):
     monkeypatch.setattr("kon.session.Session.get_sessions_dir", lambda cwd: tmp_path)
 
-    target = get_model("deepseek-v4-flash", "deepseek")
+    target = get_model("deepseek-flash", "deepseek")
     assert target is not None
     assert target.api == ApiType.OPENAI_COMPLETIONS
 

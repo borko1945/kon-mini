@@ -552,7 +552,7 @@ You can also pass API-key credentials directly on launch:
 
 ```bash
 kon --provider openai --model some-model --api-key "$OPENAI_API_KEY"
-kon --provider deepseek --model deepseek-v4-flash
+kon --provider deepseek --model deepseek-flash
 ```
 
 After signing in to xAI via `/login`, launch Grok with:

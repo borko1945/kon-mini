@@ -60,13 +60,13 @@ MODELS: dict[str, Model] = {
         context_window=1000000,
     ),
     # DeepSeek models (OpenAI-compatible Chat Completions API)
-    "deepseek-v4-flash": Model(
-        id="deepseek-v4-flash",
+    "deepseek-flash": Model(
+        id="deepseek-flash",
         provider="deepseek",
         api=ApiType.OPENAI_COMPLETIONS,
         base_url="https://api.deepseek.com",
         max_tokens=384000,
-        supports_images=False,
+        supports_images=True,
         supports_thinking=True,
         context_window=1000000,
     ),
