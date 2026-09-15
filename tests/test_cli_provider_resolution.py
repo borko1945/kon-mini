@@ -40,7 +40,7 @@ def _runtime(
     monkeypatch.setattr(kon_config.llm, "default_base_url", default_base_url)
     return ConversationRuntime(
         cwd="/test/project",
-        model="deepseek-v4-flash",
+        model="deepseek-flash",
         model_provider=default_provider,
         api_key=None,
         base_url=base_url,
@@ -68,7 +68,7 @@ def test_model_without_explicit_provider_resolves_own_provider_base_url(monkeypa
 def test_default_provider_keeps_config_base_url_override(monkeypatch):
     rt = _runtime(monkeypatch)
 
-    _, url = rt._model_api_and_base_url("deepseek-v4-flash", "deepseek")
+    _, url = rt._model_api_and_base_url("deepseek-flash", "deepseek")
 
     assert url == "https://proxy.example.com/v1"
 

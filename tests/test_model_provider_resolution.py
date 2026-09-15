@@ -13,10 +13,21 @@ def test_get_model_prefers_provider_when_specified():
 
 
 def test_get_model_falls_back_to_id_lookup():
-    model = get_model("glm-5.1")
+    model = get_model("glm-5.3")
 
     assert model is not None
     assert model.provider == "zhipu"
+    assert model.context_window == 1000000
+    assert model.max_tokens == 131072
+
+
+def test_get_model_resolves_glm_5_3_flash():
+    model = get_model("glm-5.3-flash", "zhipu")
+
+    assert model is not None
+    assert model.provider == "zhipu"
+    assert model.supports_images is True
+    assert model.context_window == 1000000
 
 
 def test_get_model_prefers_provider_for_gpt_5_5():
@@ -31,14 +42,17 @@ def test_get_model_prefers_provider_for_gpt_5_5():
 
 
 def test_get_model_resolves_deepseek_models():
-    model = get_model("deepseek-v4-flash", "deepseek")
+    model = get_model("deepseek-flash", "deepseek")
 
     assert model is not None
     assert model.provider == "deepseek"
+    assert model.context_window == 1000000
+    assert model.max_tokens == 384000
+    assert model.supports_images is True
 
 
-def test_get_model_resolves_grok_4_5():
-    model = get_model("grok-4.5", "xai")
+def test_get_model_resolves_grok_4_6():
+    model = get_model("grok-4.6", "xai")
 
     assert model is not None
     assert model.provider == "xai"

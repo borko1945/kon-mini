@@ -508,6 +508,12 @@ Important fields:
 > [!NOTE]
 > Installed skills do **not** appear as slash commands by default — without `register_cmd` they are only described to the model, which invokes them on its own when relevant. Add `register_cmd: true` to a skill's frontmatter to trigger it manually as `/<skill-name>`.
 
+#### Auto-registering skills
+
+To register every skill as a slash command without editing each `SKILL.md`, start Kon with `--register-skills` or set the `KON_AUTO_REGISTER_SKILLS` environment variable (`1`/`true`/`yes`/`on`). When both are used, the CLI flag wins.
+
+Auto-register only applies to skills whose frontmatter **omits** `register_cmd` — an explicit `true`, `false`, or `only` is always honored unchanged. An omitted key is treated as `only`: the skill becomes a slash command but is excluded from the system prompt. Auto-register applies to interactive (TUI) sessions only; in headless mode (`kon -p`) it is ignored.
+
 Validation highlights:
 
 - lowercase letters, numbers, and `-` only
@@ -552,13 +558,13 @@ You can also pass API-key credentials directly on launch:
 
 ```bash
 kon --provider openai --model some-model --api-key "$OPENAI_API_KEY"
-kon --provider deepseek --model deepseek-v4-flash
+kon --provider deepseek --model deepseek-flash
 ```
 
 After signing in to xAI via `/login`, launch Grok with:
 
 ```bash
-kon --provider xai --model grok-4.5
+kon --provider xai --model grok-4.6
 ```
 
 ### Local models
