@@ -7,6 +7,7 @@ from kon.runtime import ConversationRuntime, default_base_url_for_api
 def test_resolve_provider_api_type_known_provider():
     assert resolve_provider_api_type("github-copilot") == ApiType.GITHUB_COPILOT
     assert resolve_provider_api_type("openai") == ApiType.OPENAI_COMPLETIONS
+    assert resolve_provider_api_type("openrouter") == ApiType.OPENAI_COMPLETIONS
     assert resolve_provider_api_type("xai") == ApiType.XAI_RESPONSES
 
 
@@ -27,6 +28,15 @@ def testdefault_base_url_for_api_openai_completions(monkeypatch):
 
 def testdefault_base_url_for_api_non_openai_completions():
     assert default_base_url_for_api(ApiType.ANTHROPIC_COPILOT) is None
+
+
+def test_default_base_url_for_openrouter(monkeypatch):
+    monkeypatch.delenv("KON_BASE_URL", raising=False)
+
+    assert (
+        default_base_url_for_api(ApiType.OPENAI_COMPLETIONS, "openrouter")
+        == "https://openrouter.ai/api/v1"
+    )
 
 
 def _runtime(
@@ -79,3 +89,34 @@ def test_explicit_base_url_wins_over_model_default(monkeypatch):
     _, url = rt._model_api_and_base_url("gpt-5.6-luna", "openai-codex")
 
     assert url == "http://localhost:11434/v1"
+
+
+def test_openrouter_uses_provider_default_for_qualified_model(monkeypatch):
+    rt = _runtime(monkeypatch, default_provider="openrouter", default_base_url="")
+
+    api_type, url = rt._model_api_and_base_url("openrouter/free", "openrouter")
+
+    assert api_type == ApiType.OPENAI_COMPLETIONS
+    assert url == "https://openrouter.ai/api/v1"
+
+
+def test_openrouter_does_not_route_colliding_model_id_to_catalog_provider(monkeypatch):
+    rt = _runtime(monkeypatch, default_provider="openrouter", default_base_url="")
+
+    api_type, url = rt._model_api_and_base_url("deepseek-flash", "openrouter")
+
+    assert api_type == ApiType.OPENAI_COMPLETIONS
+    assert url == "https://openrouter.ai/api/v1"
+
+
+def test_openrouter_honors_explicit_base_url(monkeypatch):
+    rt = _runtime(
+        monkeypatch,
+        base_url="https://openrouter-proxy.example.com/v1",
+        default_provider="openrouter",
+        default_base_url="",
+    )
+
+    _, url = rt._model_api_and_base_url("openrouter/free", "openrouter")
+
+    assert url == "https://openrouter-proxy.example.com/v1"

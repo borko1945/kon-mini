@@ -25,7 +25,9 @@ from .session import CustomMessageEntry, MessageEntry, Session
 from .tools import BaseTool
 
 
-def default_base_url_for_api(api_type: ApiType) -> str | None:
+def default_base_url_for_api(api_type: ApiType, provider: str | None = None) -> str | None:
+    if provider == "openrouter":
+        return os.environ.get("KON_BASE_URL", "https://openrouter.ai/api/v1")
     if api_type == ApiType.OPENAI_COMPLETIONS:
         return os.environ.get("KON_BASE_URL", "https://api.z.ai/api/coding/paas/v4")
     return None
@@ -120,6 +122,11 @@ class ConversationRuntime:
         self, model: str, provider: str | None
     ) -> tuple[ApiType, str | None]:
         model_info = get_model(model, provider)
+        # An explicit provider is authoritative. A model ID may collide with a
+        # catalog entry owned by another provider (for example, routing
+        # `deepseek-flash` through OpenRouter).
+        if provider is not None and model_info is not None and model_info.provider != provider:
+            model_info = None
 
         # `default_base_url` is an override for the configured default provider
         # only. When a different provider is in effect (e.g. a catalog model
@@ -145,7 +152,9 @@ class ConversationRuntime:
         api_type = resolve_provider_api_type(effective_provider)
         return (
             api_type,
-            self.explicit_base_url or config_override or default_base_url_for_api(api_type),
+            self.explicit_base_url
+            or config_override
+            or default_base_url_for_api(api_type, effective_provider),
         )
 
     def _new_agent(

@@ -353,6 +353,28 @@ class TestEnvVarsForProvider:
         env_vars = OpenAICompletionsProvider._env_vars_for_provider(config)
         assert env_vars == ("OPENAI_API_KEY",)
 
+    def test_openrouter_provider_uses_only_openrouter_key(self) -> None:
+        config = ProviderConfig(provider="openrouter", base_url="https://openrouter.ai/api/v1")
+        env_vars = OpenAICompletionsProvider._env_vars_for_provider(config)
+        assert env_vars == ("OPENROUTER_API_KEY",)
+
+    def test_openrouter_base_url_without_provider_uses_openrouter_key(self) -> None:
+        config = ProviderConfig(base_url="https://openrouter.ai/api/v1")
+        env_vars = OpenAICompletionsProvider._env_vars_for_provider(config)
+        assert env_vars == ("OPENROUTER_API_KEY",)
+
+    def test_openrouter_missing_key_names_provider(self, monkeypatch) -> None:
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        config = ProviderConfig(
+            provider="openrouter",
+            base_url="https://openrouter.ai/api/v1",
+            model="openrouter/free",
+            openai_compat_auth_mode="required",
+        )
+
+        with pytest.raises(ValueError, match="No API key found for openrouter"):
+            OpenAICompletionsProvider(config)
+
     def test_deepseek_base_url_without_provider_uses_deepseek_then_openai_key(self) -> None:
         config = ProviderConfig(base_url="https://api.deepseek.com/v1")
         env_vars = OpenAICompletionsProvider._env_vars_for_provider(config)
