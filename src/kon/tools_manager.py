@@ -1,4 +1,5 @@
 import asyncio
+import os
 import platform
 import re
 import shutil
@@ -85,6 +86,12 @@ def get_tool_path(tool: ToolName) -> str | None:
     config = _TOOLS.get(tool)
     if not config:
         return None
+
+    # Check for user-specified binary path via environment variable
+    env_var = f"KON_{config.binary_name.upper()}_PATH"
+    env_path = os.environ.get(env_var)
+    if env_path and Path(env_path).exists():
+        return env_path
 
     ext = ".exe" if _get_platform() == "win32" else ""
     local_path = _BIN_DIR / (config.binary_name + ext)

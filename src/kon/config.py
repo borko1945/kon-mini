@@ -23,7 +23,7 @@ PermissionMode = Literal["prompt", "auto"]
 NotificationMode = Literal["on", "off"]
 PERMISSION_MODES: tuple[PermissionMode, ...] = get_args(PermissionMode)
 NOTIFICATION_MODES: tuple[NotificationMode, ...] = get_args(NotificationMode)
-
+_ENV_PATH_MAP: dict[str, str] = {"rg": "KON_RG_PATH", "fd": "KON_FD_PATH"}
 
 # =================================================================================================
 # Persisted Config Schema and Defaults
@@ -282,6 +282,13 @@ def _detect_available_binaries() -> set[str]:
     bin_dir = get_config_dir() / "bin"
 
     for binary in binaries:
+        # Check env var first
+        env_var = _ENV_PATH_MAP.get(binary)
+        if env_var:
+            env_path = os.environ.get(env_var)
+            if env_path and Path(env_path).exists():
+                available.add(binary)
+                continue
         if shutil.which(binary) or (bin_dir / binary).exists():
             available.add(binary)
 
