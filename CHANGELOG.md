@@ -4,14 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- No changes yet.
+
+## 0.4.3 - 2026-09-21
+
 ### Added
 
-- Added `--register-skills` flag and `KON_AUTO_REGISTER_SKILLS` environment variable to register skills as slash commands even when their SKILL.md frontmatter omits `register_cmd`. Omitted keys are treated as `only`; explicit values are always honored. The CLI flag takes precedence over the environment variable, and auto-register is ignored in headless mode (`-p`).
+- Added an OpenRouter provider alias with support for arbitrary OpenRouter model IDs - @clach04.
+- Added configurable cooldowns between agent turns for provider rate limiting - @s3rj1k.
+- Added `--register-skills` and `KON_AUTO_REGISTER_SKILLS` to expose skills as slash commands without changing their frontmatter - @clach04.
+- Added `KON_RG_PATH` and `KON_FD_PATH` overrides for managed binary locations - @sukhbinder.
+- Added GLM-5.3, GLM-5.3 Flash, DeepSeek Flash, and Grok 4.6 model definitions.
+- Added Ctrl+Backspace support for deleting the previous word in the prompt editor.
+
+### Changed
+
+- Synced Kon's theme palette with Ghostty and added a theme synchronization script.
+- Improved slash-command completion, styling, Tab behavior, and registered-skill recall from history.
+- Show a waiting status immediately after prompt submission, then switch to working when model output starts - @clach04.
 
 ### Fixed
 
-- Fixed OpenAI Codex Responses Lite error `requires reasoning.context to be all_turns` by always sending `reasoning.context: "all_turns"` for GPT-5.6 Codex models, even when thinking is disabled.
-- Fixed `kon -m <model> --provider <provider>` routing requests for non-default providers to the config's `default_base_url` host (e.g. selecting `gpt-5.6-luna`/`openai-codex` while `default_base_url` points at DeepSeek caused 401 "api key invalid" errors). The config base URL override now applies only to the configured default provider.
+- Fixed OpenAI Codex Responses Lite reasoning context and prevented `default_base_url` from misrouting non-default providers - @Kreijstal.
+- Fixed OpenRouter provider routing and model switching across custom base URLs.
+- Fixed Windows paths in Git Bash commands and cross-platform path handling in the find tool - @sukhbinder.
+- Fixed Windows `/copy` failures for responses containing Unicode characters - @sukhbinder.
+- Fixed empty streaming blocks, active-worker permission updates, and waiting-status transitions.
+- Fixed Windows test coverage and restored tests that were incorrectly skipped - @skarasov.
+- Declared `httpx` as a direct dependency.
 
 ## 0.4.2 - 2026-07-20
 
