@@ -50,6 +50,7 @@ def _try_run(command: list[str], text: str) -> bool:
             text=True,
             check=True,
             timeout=5,
+            encoding="utf-8",
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
