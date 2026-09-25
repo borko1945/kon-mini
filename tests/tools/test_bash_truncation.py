@@ -37,7 +37,7 @@ async def test_inline_output_truncates_without_temp_file_path(monkeypatch):
 
     assert result.success is True
     assert result.result is not None
-    assert f"[output truncated to last {MAX_OUTPUT_LINES} lines of {line_count}]" in result.result
+    assert f"[TRUNCATED: last {MAX_OUTPUT_LINES} of {line_count} lines shown." in result.result
     assert "full output:" not in result.result
     # Bounded: kept lines + a separator + the marker line.
     assert result.result.count("\n") <= MAX_OUTPUT_LINES + 2
@@ -54,10 +54,8 @@ async def test_default_truncates_with_temp_file_path(monkeypatch):
 
     assert result.success is True
     assert result.result is not None
-    assert (
-        f"[output truncated to last {MAX_OUTPUT_LINES} lines of {line_count}; "
-        f"full output: {fake_path}]"
-    ) in result.result
+    assert f"[TRUNCATED: last {MAX_OUTPUT_LINES} of {line_count} lines shown." in result.result
+    assert f"Full output: {fake_path} — use grep -n or sed -n on it" in result.result
 
 
 @pytest.mark.asyncio
@@ -70,7 +68,7 @@ async def test_inline_output_keeps_excerpt_for_single_oversized_line(monkeypatch
     assert result.success is True
     assert result.result is not None
     assert result.result.startswith("a" * 100)
-    assert "[output truncated to last 1 lines of 1]" in result.result
+    assert "[TRUNCATED: last 1 of 1 lines shown." in result.result
     assert "full output:" not in result.result
     assert len(result.result.encode()) < MAX_OUTPUT_BYTES + 200
 
