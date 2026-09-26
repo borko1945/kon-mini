@@ -131,6 +131,7 @@ class Kon(TextArea):
         self._slash_command_names = frozenset(names)
 
     async def _on_key(self, event: events.Key) -> None:
+        paste_debug_log("key-input", f"key={event.key!r} char={event.character!r}")
         future = getattr(self.app, "_approval_future", None)
         approval_keys = ("y", "Y", "n", "N")
         if not self.text:

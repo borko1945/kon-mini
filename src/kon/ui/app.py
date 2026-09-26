@@ -18,6 +18,7 @@ import webbrowser
 from collections import deque
 from typing import ClassVar
 
+import textual
 from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -325,7 +326,23 @@ class Kon(
         )
         input_box.paste_text(event.text)
 
+    async def _on_key(self, event: events.Key) -> None:
+        """Log keys that no widget handled (diagnostics via KON_DEBUG_PASTE)."""
+        focused = self.focused
+        paste_debug_log(
+            "key-unhandled",
+            f"focused={type(focused).__name__ if focused else None} "
+            f"key={event.key!r} char={event.character!r}",
+        )
+
     def on_mount(self) -> None:
+        paste_debug_log(
+            "startup",
+            f"pid={os.getpid()} textual={textual.__version__} "
+            f"driver={type(self._driver).__name__ if self._driver else None} "
+            f"TERM={os.environ.get('TERM')!r} TMUX={os.environ.get('TMUX')!r} "
+            f"TERM_PROGRAM={os.environ.get('TERM_PROGRAM')!r}",
+        )
         self._fd_path = get_tool_path("fd")
 
         input_box = self.query_one("#input-box", InputBox)
