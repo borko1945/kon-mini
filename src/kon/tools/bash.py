@@ -17,8 +17,8 @@ from ..core.types import ToolResult
 from .base import BaseTool
 
 DEFAULT_TIMEOUT = 180
-MAX_OUTPUT_BYTES = 50 * 1024
-MAX_OUTPUT_LINES = 2000
+MAX_OUTPUT_BYTES = 2048
+MAX_OUTPUT_LINES = 40
 _SUBPROCESS_DRAIN_TIMEOUT_SECONDS = 1.0
 
 _IS_WINDOWS: bool = sys.platform == "win32"
@@ -186,11 +186,10 @@ class BashTool(BaseTool):
     )
     description = (
         "Execute a bash command in the current working directory. "
-        f"Output truncated to last {MAX_OUTPUT_LINES} lines or {MAX_OUTPUT_BYTES // 1024}KB. "
-        "If truncated, full output is saved to a temp file. "
-        "Optionally provide a timeout in seconds. "
-        "IMPORTANT: Do NOT use bash for file search (use grep/find tools instead), "
-        "reading files (use read), or editing files (use edit)."
+        f"Output is hard-capped at {MAX_OUTPUT_LINES} lines / {MAX_OUTPUT_BYTES} bytes; "
+        "excess is cut from the top (last lines kept). "
+        "Filter output yourself with head/tail/grep/sed -n so it fits. "
+        "Optionally provide a timeout in seconds."
     )
 
     # TODO: Add streaming support via an optional `on_chunk` callback parameter
@@ -358,14 +357,16 @@ class BashTool(BaseTool):
             trunc = _truncate_tail(full_output)
             if trunc.truncated:
                 marker = (
-                    f"\n\n[output truncated to last {trunc.lines_kept} lines "
-                    f"of {trunc.total_lines}"
+                    f"\n\n[TRUNCATED: last {trunc.lines_kept} of {trunc.total_lines} lines shown."
                 )
                 if inline_output:
-                    marker += "]"
+                    marker += " Narrow the command with grep/head/tail.]"
                 else:
                     temp_file_path = _write_full_output_to_temp(full_output)
-                    marker += f"; full output: {temp_file_path}]"
+                    marker += (
+                        f" Full output: {temp_file_path} — use grep -n or sed -n on it, "
+                        "don't re-run.]"
+                    )
                 trunc.content += marker
 
             result_text = trunc.content or "(no output)"
