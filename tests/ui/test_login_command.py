@@ -2,7 +2,6 @@ from contextlib import contextmanager
 
 import pytest
 
-from kon.llm.oauth.openai import OpenAICredentials
 from kon.ui.commands import CommandsMixin
 from kon.ui.commands import auth as commands
 from kon.ui.floating_list import ListItem
@@ -92,53 +91,6 @@ class FakeCommands(CommandsMixin):
 
 
 @pytest.mark.asyncio
-async def test_openai_login_flow_skips_oauth_when_credentials_are_valid(monkeypatch):
-    fake = FakeCommands()
-    creds = OpenAICredentials(
-        refresh="refresh", access="access", expires=9_999_999_999_999, account_id="account"
-    )
-    login_calls: list[int] = []
-
-    async def get_credentials() -> OpenAICredentials:
-        return creds
-
-    async def login(**kwargs) -> None:
-        login_calls.append(1)
-
-    monkeypatch.setattr(commands, "get_valid_openai_credentials", get_credentials)
-    monkeypatch.setattr(commands, "openai_login", login)
-
-    await fake._openai_login_flow()
-
-    assert login_calls == []
-    assert fake.chat.infos == ["Already logged in to OpenAI"]
-
-
-@pytest.mark.asyncio
-async def test_openai_login_flow_starts_oauth_for_stale_saved_credentials(monkeypatch):
-    fake = FakeCommands()
-    login_calls: list[int] = []
-
-    async def get_credentials() -> None:
-        return None
-
-    async def login(**kwargs) -> None:
-        login_calls.append(1)
-
-    monkeypatch.setattr(commands, "has_saved_openai_credentials", lambda: True)
-    monkeypatch.setattr(commands, "get_valid_openai_credentials", get_credentials)
-    monkeypatch.setattr(commands, "openai_login", login)
-
-    await fake._openai_login_flow()
-
-    assert login_calls == [1]
-    assert fake.chat.warnings == ["Your saved OpenAI session is no longer valid."]
-    assert fake.chat.infos == [
-        "Successfully logged in to OpenAI!\nYou can now use /model to select openai-codex models."
-    ]
-
-
-@pytest.mark.asyncio
 async def test_copilot_login_flow_starts_oauth_for_stale_saved_credentials(monkeypatch):
     fake = FakeCommands()
     login_calls: list[int] = []
@@ -166,27 +118,19 @@ async def test_copilot_login_flow_starts_oauth_for_stale_saved_credentials(monke
 def test_select_login_provider_schedules_login_workers():
     fake = FakeCommands()
 
-    fake._select_login_provider("openai")
     fake._select_login_provider("github-copilot")
-    fake._select_login_provider("xai")
 
-    assert len(fake.workers) == 3
+    assert len(fake.workers) == 1
     assert all(exclusive is False for _, exclusive in fake.workers)
     assert fake.chat.infos == []
 
 
 def test_login_picker_marks_saved_credentials_without_logged_in_checkmark(monkeypatch):
     fake = FakeCommands()
-    monkeypatch.setattr(commands, "has_saved_openai_credentials", lambda: True)
-    monkeypatch.setattr(commands, "has_saved_copilot_credentials", lambda: False)
-    monkeypatch.setattr(commands, "has_saved_xai_credentials", lambda: False)
+    monkeypatch.setattr(commands, "has_saved_copilot_credentials", lambda: True)
 
     fake._handle_login_command("")
 
     assert fake._selection_mode == SelectionMode.LOGIN
     rows = [(item.value, item.label, item.description) for item in fake.completion_list.items]
-    assert rows == [
-        ("github-copilot", "GitHub Copilot", ""),
-        ("openai", "OpenAI (ChatGPT/Codex)", "saved credentials"),
-        ("xai", "xAI (Grok/X subscription)", ""),
-    ]
+    assert rows == [("github-copilot", "GitHub Copilot", "saved credentials")]

@@ -43,10 +43,8 @@ def _runtime_with_provider(provider: BaseProvider) -> ConversationRuntime:
 @pytest.mark.parametrize(
     ("api_type", "provider_name", "expected_name"),
     [
-        (ApiType.OPENAI_CODEX_RESPONSES, "openai-codex", "openai-codex"),
         (ApiType.GITHUB_COPILOT, "github-copilot", "github-copilot"),
         (ApiType.GITHUB_COPILOT_RESPONSES, "github-copilot", "github-copilot"),
-        (ApiType.ANTHROPIC_COPILOT, "github-copilot", "github-copilot-anthropic"),
     ],
 )
 def test_create_provider_does_not_require_oauth_credentials(
@@ -59,13 +57,13 @@ def test_create_provider_does_not_require_oauth_credentials(
     assert provider.name == expected_name
 
 
-def test_initialize_creates_openai_codex_agent_without_credentials(tmp_path, monkeypatch):
+def test_initialize_creates_copilot_agent_without_credentials(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
 
     runtime = ConversationRuntime(
         cwd=str(tmp_path),
         model="gpt-5.5",
-        model_provider="openai-codex",
+        model_provider="github-copilot",
         api_key=None,
         base_url=None,
         thinking_level="high",
@@ -142,9 +140,7 @@ def test_switch_model_uses_default_provider_base_url_override(monkeypatch):
     monkeypatch.setattr(kon_config.llm, "default_base_url", "https://proxy.example.com/v1")
     initial_provider = _FakeProvider(
         ProviderConfig(
-            provider="openai-codex",
-            base_url="https://chatgpt.com/backend-api",
-            model="gpt-5.6-luna",
+            provider="zhipu", base_url="https://api.z.ai/api/coding/paas/v4", model="glm-5.3"
         )
     )
     runtime = _runtime_with_provider(initial_provider)
@@ -185,13 +181,13 @@ def test_switch_model_explicit_base_url_wins(monkeypatch):
         tools=[],
     )
     runtime.provider = initial_provider
-    target = get_model("gpt-5.6-luna", "openai-codex")
+    target = get_model("glm-5.3", "zhipu")
     assert target is not None
 
     created_configs: list[ProviderConfig] = []
 
     def fake_create_provider(api_type: ApiType, config: ProviderConfig) -> BaseProvider:
-        assert api_type == ApiType.OPENAI_CODEX_RESPONSES
+        assert api_type == ApiType.OPENAI_COMPLETIONS
         created_configs.append(config)
         return _FakeProvider(config)
 

@@ -133,7 +133,7 @@ class Kon(
         self._api_key = api_key
         # The config's default_base_url is applied inside the runtime for the
         # default provider only; passing it here would misroute explicitly
-        # selected models from other providers (e.g. openai-codex) to the
+        # selected models from other providers (e.g. github-copilot) to the
         # default provider's host.
         self._base_url = base_url or None
         self._resume_session = resume_session

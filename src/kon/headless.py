@@ -85,7 +85,7 @@ async def run_headless(
         )
         # The config's default_base_url is applied inside the runtime for the
         # default provider only; passing it here would misroute explicitly
-        # selected models from other providers (e.g. openai-codex) to the
+        # selected models from other providers (e.g. github-copilot) to the
         # default provider's host.
         base = base_url or None
         thinking = config.llm.default_thinking_level

@@ -75,9 +75,6 @@ echo "Setting up isolated e2e environment..."
 cleanup
 rm -rf "$TEST_DIR" "$TEST_HOME"
 mkdir -p "$TEST_DIR" "$TEST_HOME/.config/kon"
-if [ -f "$HOME/.config/kon/openai_auth.json" ]; then
-    cp "$HOME/.config/kon/openai_auth.json" "$TEST_HOME/.config/kon/openai_auth.json"
-fi
 if [ -f "$HOME/.config/kon/copilot_auth.json" ]; then
     cp "$HOME/.config/kon/copilot_auth.json" "$TEST_HOME/.config/kon/copilot_auth.json"
 fi
@@ -93,7 +90,7 @@ rm -f /tmp/kon-test-*.txt
 
 # === Start kon (from kon repo for tab completion tests) ===
 echo "Starting kon in tmux from kon repo with HOME=$TEST_HOME..."
-tmux new-session -d -s "$SESSION_NAME" -c "$KON_DIR" "HOME=$TEST_HOME OPENAI_API_KEY=\"${OPENAI_API_KEY:-}\" ZAI_API_KEY=\"${ZAI_API_KEY:-}\" ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" AZURE_AI_FOUNDRY_API_KEY=\"${AZURE_AI_FOUNDRY_API_KEY:-}\" AZURE_AI_FOUNDRY_BASE_URL=\"${AZURE_AI_FOUNDRY_BASE_URL:-}\" $KON_CMD"
+tmux new-session -d -s "$SESSION_NAME" -c "$KON_DIR" "HOME=$TEST_HOME OPENAI_API_KEY=\"${OPENAI_API_KEY:-}\" ZAI_API_KEY=\"${ZAI_API_KEY:-}\" ANTHROPIC_API_KEY=\"${ANTHROPIC_API_KEY:-}\" $KON_CMD"
 sleep 5  # Give kon time to start and render UI
 
 # =============================================================================

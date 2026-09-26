@@ -3,7 +3,6 @@ from typing import Any, cast
 import pytest
 
 from kon.llm.base import ProviderConfig, is_local_base_url, resolve_api_key
-from kon.llm.providers.openai_codex_responses import OpenAICodexResponsesProvider
 from kon.llm.providers.openai_compat import supports_developer_role
 from kon.llm.providers.openai_completions import OpenAICompletionsProvider, _detect_compat
 from kon.llm.providers.openai_responses import OpenAIResponsesProvider
@@ -229,52 +228,6 @@ def test_openai_responses_uses_developer_for_openai_api() -> None:
     messages = provider._convert_messages([], "You are helpful")
 
     assert messages[0]["role"] == "developer"
-
-
-def test_openai_codex_request_uses_session_for_prompt_caching() -> None:
-    provider = OpenAICodexResponsesProvider(
-        ProviderConfig(
-            base_url="https://chatgpt.com/backend-api",
-            model="gpt-5.5",
-            provider="openai-codex",
-            session_id="session-123",
-        )
-    )
-
-    body = provider._build_request_body([], "You are helpful", None, None)
-    headers = provider._build_headers("token", "account")
-
-    assert body["prompt_cache_key"] == "session-123"
-    assert headers["version"] == "0.144.1"
-    assert headers["session-id"] == "session-123"
-    assert headers["thread-id"] == "session-123"
-    assert headers["x-client-request-id"] == "session-123"
-
-
-def test_openai_codex_request_omits_prompt_cache_fields_without_session() -> None:
-    provider = OpenAICodexResponsesProvider(
-        ProviderConfig(
-            base_url="https://chatgpt.com/backend-api", model="gpt-5.5", provider="openai-codex"
-        )
-    )
-
-    body = provider._build_request_body([], "You are helpful", None, None)
-    headers = provider._build_headers("token", "account")
-
-    assert "prompt_cache_key" not in body
-    assert "session-id" not in headers
-    assert "thread-id" not in headers
-    assert "conversation_id" not in headers
-
-
-def test_openai_codex_request_maps_ultra_to_max() -> None:
-    provider = OpenAICodexResponsesProvider(
-        ProviderConfig(model="gpt-5.6-sol", provider="openai-codex", thinking_level="ultra")
-    )
-
-    body = provider._build_request_body([], "You are helpful", None, None)
-
-    assert body["reasoning"] == {"effort": "max", "summary": "auto", "context": "all_turns"}
 
 
 def test_openai_responses_request_maps_ultra_to_max() -> None:

@@ -21,7 +21,6 @@ def _module_loaded(loaded: set[str], module_name: str) -> bool:
 def test_import_does_not_load_provider_sdks(import_target):
     loaded = _modules_loaded_after(import_target)
     assert not _module_loaded(loaded, "openai")
-    assert not _module_loaded(loaded, "anthropic")
 
 
 @pytest.mark.parametrize("import_target", ["kon.cli", "kon.headless"])
@@ -34,10 +33,6 @@ _PROVIDER_CASES = [
     (ApiType.GITHUB_COPILOT, "CopilotProvider"),
     (ApiType.GITHUB_COPILOT_RESPONSES, "CopilotResponsesProvider"),
     (ApiType.OPENAI_RESPONSES, "OpenAIResponsesProvider"),
-    (ApiType.OPENAI_CODEX_RESPONSES, "OpenAICodexResponsesProvider"),
-    (ApiType.XAI_RESPONSES, "XaiResponsesProvider"),
-    (ApiType.ANTHROPIC_COPILOT, "CopilotAnthropicProvider"),
-    (ApiType.AZURE_AI_FOUNDRY, "AzureAIFoundryProvider"),
     (ApiType.OPENAI_COMPLETIONS, "OpenAICompletionsProvider"),
 ]
 

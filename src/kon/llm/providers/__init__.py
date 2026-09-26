@@ -6,11 +6,8 @@ PROVIDER_API_BY_NAME: dict[str, ApiType] = {
     "zhipu": ApiType.OPENAI_COMPLETIONS,
     "deepseek": ApiType.OPENAI_COMPLETIONS,
     "openrouter": ApiType.OPENAI_COMPLETIONS,
-    "xai": ApiType.XAI_RESPONSES,
     "github-copilot": ApiType.GITHUB_COPILOT,
     "openai-responses": ApiType.OPENAI_RESPONSES,
-    "openai-codex": ApiType.OPENAI_CODEX_RESPONSES,
-    "azure-ai-foundry": ApiType.AZURE_AI_FOUNDRY,
 }
 
 
@@ -40,22 +37,6 @@ def get_provider_class(api_type: ApiType) -> type[BaseProvider]:
             from .openai_responses import OpenAIResponsesProvider
 
             return OpenAIResponsesProvider
-        case ApiType.OPENAI_CODEX_RESPONSES:
-            from .openai_codex_responses import OpenAICodexResponsesProvider
-
-            return OpenAICodexResponsesProvider
-        case ApiType.XAI_RESPONSES:
-            from .xai_responses import XaiResponsesProvider
-
-            return XaiResponsesProvider
-        case ApiType.ANTHROPIC_COPILOT:
-            from .copilot_anthropic import CopilotAnthropicProvider
-
-            return CopilotAnthropicProvider
-        case ApiType.AZURE_AI_FOUNDRY:
-            from .azure_ai_foundry import AzureAIFoundryProvider
-
-            return AzureAIFoundryProvider
         case ApiType.OPENAI_COMPLETIONS:
             from .openai_completions import OpenAICompletionsProvider
 

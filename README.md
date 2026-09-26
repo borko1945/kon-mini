@@ -68,7 +68,7 @@ kon
 
 ```text
 usage: kon [-h] [--model MODEL]
-           [--provider {azure-ai-foundry,deepseek,github-copilot,openai,openai-codex,openai-responses,openrouter,xai,zhipu}]
+           [--provider {deepseek,github-copilot,openai,openai-responses,openrouter,zhipu}]
            [--prompt [PROMPT]] [--api-key API_KEY] [--base-url BASE_URL]
            [--openai-compat-auth {auto,required,none}]
            [--anthropic-compat-auth {auto,required,none}]
@@ -80,7 +80,7 @@ Kon
 options:
   -h, --help            show this help message and exit
   --model, -m MODEL     Model to use
-  --provider {azure-ai-foundry,deepseek,github-copilot,openai,openai-codex,openai-responses,openrouter,xai,zhipu}
+  --provider {deepseek,github-copilot,openai,openai-responses,openrouter,zhipu}
                         Provider to use
   --prompt, -p [PROMPT]
                         Run a single prompt non-interactively, then exit (omit
@@ -110,7 +110,7 @@ options:
 
 ```bash
 # choose a provider and model explicitly
-kon --provider openai-codex -m gpt-5.6-sol
+kon --provider github-copilot -m gpt-5.6-sol
 
 # continue your latest session
 kon -c
@@ -213,8 +213,8 @@ Here is the full config shape:
 config_version = 6
 
 [llm]
-default_provider = "openai-codex" # "openai", "zhipu", "deepseek", "xai", "github-copilot", "openai-codex", "azure-ai-foundry"
-default_model = "gpt-5.6-sol"
+default_provider = "zhipu"        # "openai", "zhipu", "deepseek", "github-copilot", "openai-responses", "openrouter"
+default_model = "glm-5.3-flash"
 default_base_url = ""             # override the provider endpoint (e.g. a local server)
 default_thinking_level = "low"    # "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
 tool_call_idle_timeout_seconds = 180
@@ -542,12 +542,9 @@ Kon works with hosted models and local models exposed through an OpenAI-compatib
 Built-in provider support includes:
 
 - **GitHub Copilot**
-- **OpenAI Codex**
 - **OpenAI Responses / OpenAI-compatible endpoints**
-- **Azure AI Foundry**
 - **DeepSeek**
 - **OpenRouter**
-- **xAI Grok**
 - **ZhiPu**
 
 Use `/model` in the TUI to switch between available configured models.
@@ -557,14 +554,11 @@ Use `/model` in the TUI to switch between available configured models.
 Kon supports both OAuth login flows and direct API-key configuration.
 
 - **GitHub Copilot OAuth**: run `/login` and choose GitHub Copilot
-- **OpenAI OAuth**: run `/login` and choose OpenAI
-- **xAI OAuth**: run `/login` and choose xAI to sign in with SuperGrok or X Premium
 - **OpenAI-compatible providers**: use `OPENAI_API_KEY` or provider-specific equivalents
   - OpenAI/default: `OPENAI_API_KEY` only
   - DeepSeek: `DEEPSEEK_API_KEY` first, then `OPENAI_API_KEY`
   - OpenRouter: `OPENROUTER_API_KEY`
   - ZhiPu/ZAI: `ZAI_API_KEY` first, then `OPENAI_API_KEY`
-- **Azure AI Foundry**: set `AZURE_AI_FOUNDRY_API_KEY` and `AZURE_AI_FOUNDRY_BASE_URL`
 
 You can also pass API-key credentials directly on launch:
 
@@ -575,12 +569,6 @@ kon --provider openrouter --model vendor/model-name
 ```
 
 Any OpenRouter model ID (e.g. `anthropic/claude-sonnet-4`) works with `--model` — OpenRouter's full catalog isn't duplicated in Kon's model list.
-
-After signing in to xAI via `/login`, launch Grok with:
-
-```bash
-kon --provider xai --model grok-4.6
-```
 
 ### Local models
 

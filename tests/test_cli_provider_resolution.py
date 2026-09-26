@@ -8,7 +8,6 @@ def test_resolve_provider_api_type_known_provider():
     assert resolve_provider_api_type("github-copilot") == ApiType.GITHUB_COPILOT
     assert resolve_provider_api_type("openai") == ApiType.OPENAI_COMPLETIONS
     assert resolve_provider_api_type("openrouter") == ApiType.OPENAI_COMPLETIONS
-    assert resolve_provider_api_type("xai") == ApiType.XAI_RESPONSES
 
 
 def test_resolve_provider_api_type_unknown_provider():
@@ -27,7 +26,7 @@ def testdefault_base_url_for_api_openai_completions(monkeypatch):
 
 
 def testdefault_base_url_for_api_non_openai_completions():
-    assert default_base_url_for_api(ApiType.ANTHROPIC_COPILOT) is None
+    assert default_base_url_for_api(ApiType.GITHUB_COPILOT_RESPONSES) is None
 
 
 def test_default_base_url_for_openrouter(monkeypatch):
@@ -62,9 +61,9 @@ def _runtime(
 def test_non_default_provider_model_uses_its_own_base_url(monkeypatch):
     rt = _runtime(monkeypatch)
 
-    _, url = rt._model_api_and_base_url("gpt-5.6-luna", "openai-codex")
+    _, url = rt._model_api_and_base_url("glm-5.3", "zhipu")
 
-    assert url == "https://chatgpt.com/backend-api"
+    assert url == "https://api.z.ai/api/coding/paas/v4"
 
 
 def test_model_without_explicit_provider_resolves_own_provider_base_url(monkeypatch):
@@ -72,7 +71,7 @@ def test_model_without_explicit_provider_resolves_own_provider_base_url(monkeypa
 
     _, url = rt._model_api_and_base_url("gpt-5.6-sol", None)
 
-    assert url == "https://chatgpt.com/backend-api"
+    assert url == "https://api.individual.githubcopilot.com"
 
 
 def test_default_provider_keeps_config_base_url_override(monkeypatch):
@@ -86,7 +85,7 @@ def test_default_provider_keeps_config_base_url_override(monkeypatch):
 def test_explicit_base_url_wins_over_model_default(monkeypatch):
     rt = _runtime(monkeypatch, base_url="http://localhost:11434/v1")
 
-    _, url = rt._model_api_and_base_url("gpt-5.6-luna", "openai-codex")
+    _, url = rt._model_api_and_base_url("glm-5.3", "zhipu")
 
     assert url == "http://localhost:11434/v1"
 

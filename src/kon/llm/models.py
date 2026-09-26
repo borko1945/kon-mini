@@ -15,18 +15,14 @@ DEFAULT_MAX_TOKENS = 16384
 class ApiType(Enum):
     OPENAI_COMPLETIONS = "openai-completions"
     OPENAI_RESPONSES = "openai-responses"
-    OPENAI_CODEX_RESPONSES = "openai-codex-responses"
-    XAI_RESPONSES = "xai-responses"
-    ANTHROPIC_COPILOT = "anthropic-copilot"
-    AZURE_AI_FOUNDRY = "azure-ai-foundry"
     GITHUB_COPILOT = "github-copilot"
     GITHUB_COPILOT_RESPONSES = "github-copilot-responses"
 
 
 @dataclass
 class Model:
-    id: str  # Model ID (e.g., "glm-5.3", "claude-opus-4.6")
-    provider: str  # "openai", "zhipu", "github-copilot", "openai-codex"
+    id: str  # Model ID (e.g., "glm-5.3", "deepseek-flash")
+    provider: str  # "openai", "zhipu", "github-copilot"
     api: ApiType  # Which API format to use
     base_url: str  # API endpoint
     max_tokens: int  # Max output tokens
@@ -34,7 +30,6 @@ class Model:
     supports_thinking: bool  # Reasoning/thinking support
     context_window: int | None = None  # Max context (None = use config default)
     vision_model: str | None = None  # Fallback vision model if no native support
-    uses_responses_lite: bool = False  # Codex Responses Lite request contract
 
 
 MODELS: dict[str, Model] = {
@@ -80,37 +75,7 @@ MODELS: dict[str, Model] = {
         supports_thinking=True,
         context_window=1000000,
     ),
-    # xAI models (Grok/X subscription OAuth via Responses API)
-    "grok-4.6": Model(
-        id="grok-4.6",
-        provider="xai",
-        api=ApiType.XAI_RESPONSES,
-        base_url="https://api.x.ai/v1",
-        max_tokens=500000,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=500000,
-    ),
-    # GitHub Copilot models - Claude (uses Anthropic Messages API for thinking support)
-    "claude-sonnet-4.6-copilot": Model(
-        id="claude-sonnet-4.6",
-        provider="github-copilot",
-        api=ApiType.ANTHROPIC_COPILOT,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    "claude-opus-4.6-copilot": Model(
-        id="claude-opus-4.6",
-        provider="github-copilot",
-        api=ApiType.ANTHROPIC_COPILOT,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    # GitHub Copilot models - GPT/Codex (uses OpenAI Responses API)
+    # GitHub Copilot models - GPT (uses Copilot Responses API)
     "gpt-5.6-sol-copilot": Model(
         id="gpt-5.6-sol",
         provider="github-copilot",
@@ -146,78 +111,6 @@ MODELS: dict[str, Model] = {
         provider="github-copilot",
         api=ApiType.GITHUB_COPILOT_RESPONSES,
         base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    # OpenAI Codex OAuth models (ChatGPT Plus/Pro subscription)
-    "gpt-5.6-sol": Model(
-        id="gpt-5.6-sol",
-        provider="openai-codex",
-        api=ApiType.OPENAI_CODEX_RESPONSES,
-        base_url="https://chatgpt.com/backend-api",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-        uses_responses_lite=True,
-    ),
-    "gpt-5.6-terra": Model(
-        id="gpt-5.6-terra",
-        provider="openai-codex",
-        api=ApiType.OPENAI_CODEX_RESPONSES,
-        base_url="https://chatgpt.com/backend-api",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-        uses_responses_lite=True,
-    ),
-    "gpt-5.6-luna": Model(
-        id="gpt-5.6-luna",
-        provider="openai-codex",
-        api=ApiType.OPENAI_CODEX_RESPONSES,
-        base_url="https://chatgpt.com/backend-api",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-        uses_responses_lite=True,
-    ),
-    "gpt-5.5": Model(
-        id="gpt-5.5",
-        provider="openai-codex",
-        api=ApiType.OPENAI_CODEX_RESPONSES,
-        base_url="https://chatgpt.com/backend-api",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    # Azure AI Foundry models (Anthropic via Azure)
-    "claude-sonnet-4.6-azure": Model(
-        id="claude-sonnet-4.6",
-        provider="azure-ai-foundry",
-        api=ApiType.AZURE_AI_FOUNDRY,
-        base_url="",  # resolved from AZURE_AI_FOUNDRY_BASE_URL env var
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    "claude-opus-4.6-azure": Model(
-        id="claude-opus-4.6",
-        provider="azure-ai-foundry",
-        api=ApiType.AZURE_AI_FOUNDRY,
-        base_url="",  # resolved from AZURE_AI_FOUNDRY_BASE_URL env var
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-    ),
-    # Azure AI Foundry - Opus 4.7
-    "claude-opus-4.7-azure": Model(
-        id="claude-opus-4.7",
-        provider="azure-ai-foundry",
-        api=ApiType.AZURE_AI_FOUNDRY,
-        base_url="",  # resolved from AZURE_AI_FOUNDRY_BASE_URL env var
         max_tokens=8192 * 2,
         supports_images=True,
         supports_thinking=True,
