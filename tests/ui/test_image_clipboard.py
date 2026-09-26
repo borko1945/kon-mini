@@ -5,12 +5,12 @@ from PIL import Image
 from kon.ui import image_clipboard
 
 
-def test_save_clipboard_image_writes_png_under_tmp(monkeypatch) -> None:
+def test_grab_clipboard_file_writes_png_under_tmp(monkeypatch) -> None:
     monkeypatch.setattr(
         image_clipboard.ImageGrab, "grabclipboard", lambda: Image.new("RGB", (2, 2))
     )
 
-    result = image_clipboard.save_clipboard_image()
+    result = image_clipboard.grab_clipboard_file()
 
     assert result is not None
     path, temporary = result
@@ -23,9 +23,15 @@ def test_save_clipboard_image_writes_png_under_tmp(monkeypatch) -> None:
         path.unlink(missing_ok=True)
 
 
-def test_save_clipboard_image_returns_existing_file(monkeypatch, tmp_path) -> None:
+def test_grab_clipboard_file_returns_existing_file(monkeypatch, tmp_path) -> None:
     path = tmp_path / "image.png"
     path.write_bytes(b"image")
     monkeypatch.setattr(image_clipboard.ImageGrab, "grabclipboard", lambda: [str(path)])
 
-    assert image_clipboard.save_clipboard_image() == (path, False)
+    assert image_clipboard.grab_clipboard_file() == (path, False)
+
+
+def test_grab_clipboard_file_returns_none_for_text(monkeypatch) -> None:
+    monkeypatch.setattr(image_clipboard.ImageGrab, "grabclipboard", lambda: "just text")
+
+    assert image_clipboard.grab_clipboard_file() is None

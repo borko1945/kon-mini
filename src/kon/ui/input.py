@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
+import time
 from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
@@ -31,7 +33,7 @@ from .autocomplete import (
     SlashCommandProvider,
 )
 from .floating_list import ListItem
-from .image_clipboard import save_clipboard_image
+from .image_clipboard import grab_clipboard_file, read_clipboard_text
 from .path_complete import PathComplete
 from .prompt_history import PromptHistory
 
@@ -43,6 +45,19 @@ if TYPE_CHECKING:
 ANSI_SEQUENCES_KEYS["\x1b\r"] = (SimpleNamespace(value="shift+enter"),)  # type: ignore[assignment]
 ANSI_SEQUENCES_KEYS["\x1b[13;3u"] = (SimpleNamespace(value="alt+enter"),)  # type: ignore[assignment]
 ANSI_SEQUENCES_KEYS["\x1b[13;2u"] = (SimpleNamespace(value="shift+enter"),)  # type: ignore[assignment]
+
+
+def paste_debug_log(label: str, detail: str) -> None:
+    """Append paste diagnostics to KON_DEBUG_PASTE when it holds a file path."""
+    log_path = os.environ.get("KON_DEBUG_PASTE")
+    if not log_path:
+        return
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%H:%M:%S')} {label}: {detail}\n")
+    except OSError:
+        pass
+
 
 _PASTE_LINE_THRESHOLD = 5
 _PASTE_CHAR_THRESHOLD = 500
@@ -132,6 +147,12 @@ class Kon(TextArea):
         await super()._on_key(event)
 
     async def _on_paste(self, event: events.Paste) -> None:
+        focused = self.app.focused
+        paste_debug_log(
+            "paste-event",
+            f"focused={type(focused).__name__ if focused else None} "
+            f"forwarded={event.is_forwarded} text={event.text[:120]!r}",
+        )
         # Prevent TextArea._on_paste from also running on the original event.
         event.prevent_default()
         transformed = self._on_paste_transform(event.text)
@@ -469,19 +490,43 @@ class InputBox(Vertical):
         self._image_temp_paths.clear()
         self._image_counter = 0
 
+    def paste_text(self, text: str) -> None:
+        """Insert clipboard text through the same transform as terminal pastes."""
+        self.insert(self._transform_paste(text))
+
     def action_paste_clipboard(self) -> None:
+        clipboard_file: tuple[Path, bool] | None
         try:
-            clipboard_image = save_clipboard_image()
-        except (OSError, NotImplementedError, ValueError):
-            clipboard_image = None
-        if clipboard_image is not None:
-            path, temporary = clipboard_image
-            try:
-                self.insert(self._attach_image(path, temporary=temporary))
-                return
-            except (OSError, ValueError):
-                if temporary:
-                    path.unlink(missing_ok=True)
+            clipboard_file = grab_clipboard_file()
+        except (OSError, NotImplementedError, ValueError) as e:
+            paste_debug_log("ctrl+v", f"grab_clipboard_file raised {e!r}")
+            clipboard_file = None
+
+        paste_debug_log("ctrl+v", f"clipboard_file={clipboard_file!r}")
+
+        if clipboard_file is not None:
+            path, temporary = clipboard_file
+            if is_image_file(str(path)):
+                try:
+                    self.insert(self._attach_image(path, temporary=temporary))
+                    return
+                except (OSError, ValueError) as e:
+                    paste_debug_log("ctrl+v", f"image attach failed: {e!r}")
+                    if temporary:
+                        path.unlink(missing_ok=True)
+                clipboard_file = None
+
+        text = read_clipboard_text()
+        paste_debug_log("ctrl+v", f"clipboard_text={text!r}")
+        if text:
+            self.paste_text(text)
+            return
+
+        # File copied from Finder/IDE with no text flavor: paste its path, like a
+        # terminal's paste does.
+        if clipboard_file is not None:
+            self.paste_text(shlex.quote(str(clipboard_file[0])))
+            return
 
         textarea = self.query_one("#input-textarea", TextArea)
         textarea.action_paste()

@@ -1,9 +1,11 @@
+import shlex
 from typing import Protocol, cast
 
 import pytest
 from PIL import Image
 from textual._ansi_sequences import ANSI_SEQUENCES_KEYS
 
+import kon.ui.input as input_mod
 from kon.ui import prompt_history as ph
 from kon.ui.input import InputBox
 
@@ -36,6 +38,9 @@ class _FakeTextArea:
             col = len(self.text)
         self.text = self.text[:col] + text + self.text[col:]
         self.selection = _FakeSelection(0, col + len(text))
+
+    def action_paste(self) -> None:
+        pass  # Textual's internal clipboard paste; a no-op for tests.
 
 
 class _TestableInputBox(InputBox):
@@ -158,3 +163,68 @@ def test_legacy_esc_cr_remains_shift_enter_mapping() -> None:
 
 def test_alt_enter_uses_csi_u_mapping() -> None:
     assert _sequence_value("\x1b[13;3u") == "alt+enter"
+
+
+def _clipboard_mocks(monkeypatch, file=None, text=None) -> None:
+    monkeypatch.setattr(input_mod, "grab_clipboard_file", lambda: None if file is None else file)
+    monkeypatch.setattr(input_mod, "read_clipboard_text", lambda: text)
+
+
+def test_paste_clipboard_text_inserts_text(monkeypatch) -> None:
+    input_box = _TestableInputBox()
+    _clipboard_mocks(monkeypatch, text="hello world")
+
+    input_box.action_paste_clipboard()
+
+    assert input_box._fake_textarea.text == "hello world"
+
+
+def test_paste_text_applies_paste_transform(monkeypatch) -> None:
+    input_box = _TestableInputBox()
+
+    input_box.paste_text("\r\n".join(f"line {i}" for i in range(6)))
+
+    assert input_box._fake_textarea.text == "[paste #1 +6 lines]"
+
+
+def test_paste_clipboard_text_wins_over_non_image_file(monkeypatch, tmp_path) -> None:
+    input_box = _TestableInputBox()
+    java_file = tmp_path / "Foo.java"
+    java_file.write_text("class Foo {}\n")
+    _clipboard_mocks(monkeypatch, file=(java_file, False), text='"path from ide"')
+
+    input_box.action_paste_clipboard()
+
+    assert input_box._fake_textarea.text == '"path from ide"'
+
+
+def test_paste_clipboard_non_image_file_inserts_quoted_path(monkeypatch, tmp_path) -> None:
+    input_box = _TestableInputBox()
+    java_file = tmp_path / "OpenRouterConfig.java"
+    java_file.write_text("class Config {}\n")
+    _clipboard_mocks(monkeypatch, file=(java_file, False), text=None)
+
+    input_box.action_paste_clipboard()
+
+    assert input_box._fake_textarea.text == shlex.quote(str(java_file))
+
+
+def test_paste_clipboard_image_file_attaches_image(monkeypatch, tmp_path) -> None:
+    input_box = _TestableInputBox()
+    image_file = tmp_path / "shot.png"
+    Image.new("RGB", (4, 4)).save(image_file)
+    _clipboard_mocks(monkeypatch, file=(image_file, False), text="should be ignored")
+
+    input_box.action_paste_clipboard()
+
+    assert input_box._fake_textarea.text.startswith("[Image #1 ")
+    assert len(input_box._submission_images(input_box._fake_textarea.text)) == 1
+
+
+def test_paste_clipboard_without_content_pastes_nothing(monkeypatch) -> None:
+    input_box = _TestableInputBox()
+    _clipboard_mocks(monkeypatch, file=None, text=None)
+
+    input_box.action_paste_clipboard()
+
+    assert input_box._fake_textarea.text == ""

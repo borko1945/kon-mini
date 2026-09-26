@@ -1,3 +1,4 @@
+import subprocess
 import tomllib
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -20,3 +21,26 @@ try:
     VERSION = version(PACKAGE_NAME)
 except PackageNotFoundError:
     VERSION = "0.4.3"
+
+
+def _get_commit() -> str | None:
+    """Return the short commit hash of the checkout this package runs from, if any."""
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode == 0:
+        return result.stdout.strip() or None
+    return None
+
+
+COMMIT = _get_commit()
+DISPLAY_VERSION = f"{VERSION} ({COMMIT})" if COMMIT else VERSION

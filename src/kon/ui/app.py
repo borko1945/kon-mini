@@ -21,10 +21,11 @@ from typing import ClassVar
 from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.widgets import TextArea
 
 from kon import config, consume_config_warnings
 from kon.tools_manager import get_tool_path
-from kon.version import VERSION
+from kon.version import DISPLAY_VERSION, VERSION
 
 from ..context.skills import (
     load_builtin_cmd_skills,
@@ -45,7 +46,7 @@ from .chat import ChatLog
 from .commands import CommandsMixin
 from .completion_ui import CompletionUIMixin
 from .floating_list import FloatingList, ListItem
-from .input import InputBox
+from .input import InputBox, paste_debug_log
 from .queue_ui import QueuedPrompt, QueueUIMixin
 from .selection_mode import SelectionMode
 from .session_ui import SessionUIMixin
@@ -309,6 +310,21 @@ class Kon(
         if selection:
             self.copy_to_clipboard(selection)
 
+    def _on_paste(self, event: events.Paste) -> None:
+        """Salvage paste events that bubble up unhandled (e.g. focus left the input)."""
+        focused = self.focused
+        if isinstance(focused, TextArea):
+            return  # A text area (normally the input) already consumed it.
+        try:
+            input_box = self.query_one("#input-box", InputBox)
+        except Exception:
+            return
+        paste_debug_log(
+            "paste-salvage",
+            f"focused={type(focused).__name__ if focused else None} text={event.text[:120]!r}",
+        )
+        input_box.paste_text(event.text)
+
     def on_mount(self) -> None:
         self._fd_path = get_tool_path("fd")
 
@@ -337,7 +353,7 @@ class Kon(
         self._sync_slash_commands()
 
         chat = self.query_one("#chat-log", ChatLog)
-        chat.add_session_info(VERSION)
+        chat.add_session_info(DISPLAY_VERSION)
 
         if self._runtime.context:
             chat.add_loaded_resources(

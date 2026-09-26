@@ -4,7 +4,7 @@ import asyncio
 from kon import config
 
 from .llm import PROVIDER_API_BY_NAME
-from .version import VERSION
+from .version import DISPLAY_VERSION
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Register skills as slash commands even without register_cmd in their "
         "frontmatter (treated as 'only'; see also KON_AUTO_REGISTER_SKILLS)",
     )
-    parser.add_argument("--version", action="version", version=f"kon {VERSION}")
+    parser.add_argument("--version", action="version", version=f"kon {DISPLAY_VERSION}")
     parser.add_argument(
         "--extra-tools", help="Comma-separated extra tools to enable (e.g. web_search,web_fetch)"
     )
