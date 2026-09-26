@@ -22,6 +22,7 @@ import textual
 from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.message import Message
 from textual.widgets import TextArea
 
 from kon import config, consume_config_warnings
@@ -326,6 +327,20 @@ class Kon(
         )
         input_box.paste_text(event.text)
 
+    def _install_input_tap(self) -> None:
+        """Log every event parsed from terminal input bytes (KON_DEBUG_PASTE)."""
+        driver = self._driver
+        if driver is None:
+            return
+        original = driver.process_message
+
+        def tapped_process_message(message: Message) -> None:
+            if not isinstance(message, events.Resize):
+                paste_debug_log("driver-event", f"{type(message).__name__} {message!r}")
+            original(message)
+
+        driver.process_message = tapped_process_message  # type: ignore[method-assign]
+
     async def _on_key(self, event: events.Key) -> None:
         """Log keys that no widget handled (diagnostics via KON_DEBUG_PASTE)."""
         focused = self.focused
@@ -343,6 +358,9 @@ class Kon(
             f"TERM={os.environ.get('TERM')!r} TMUX={os.environ.get('TMUX')!r} "
             f"TERM_PROGRAM={os.environ.get('TERM_PROGRAM')!r}",
         )
+        if os.environ.get("KON_DEBUG_PASTE"):
+            self._install_input_tap()
+        self._fd_path = get_tool_path("fd")
         self._fd_path = get_tool_path("fd")
 
         input_box = self.query_one("#input-box", InputBox)
