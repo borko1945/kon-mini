@@ -5,7 +5,7 @@ from kon.runtime import ConversationRuntime, default_base_url_for_api
 
 
 def test_resolve_provider_api_type_known_provider():
-    assert resolve_provider_api_type("github-copilot") == ApiType.GITHUB_COPILOT
+    assert resolve_provider_api_type("openai-responses") == ApiType.OPENAI_RESPONSES
     assert resolve_provider_api_type("openai") == ApiType.OPENAI_COMPLETIONS
     assert resolve_provider_api_type("openrouter") == ApiType.OPENAI_COMPLETIONS
 
@@ -26,7 +26,7 @@ def testdefault_base_url_for_api_openai_completions(monkeypatch):
 
 
 def testdefault_base_url_for_api_non_openai_completions():
-    assert default_base_url_for_api(ApiType.GITHUB_COPILOT_RESPONSES) is None
+    assert default_base_url_for_api(ApiType.OPENAI_RESPONSES) is None
 
 
 def test_default_base_url_for_openrouter(monkeypatch):
@@ -69,9 +69,9 @@ def test_non_default_provider_model_uses_its_own_base_url(monkeypatch):
 def test_model_without_explicit_provider_resolves_own_provider_base_url(monkeypatch):
     rt = _runtime(monkeypatch)
 
-    _, url = rt._model_api_and_base_url("gpt-5.6-sol", None)
+    _, url = rt._model_api_and_base_url("glm-5.3", None)
 
-    assert url == "https://api.individual.githubcopilot.com"
+    assert url == "https://api.z.ai/api/coding/paas/v4"
 
 
 def test_default_provider_keeps_config_base_url_override(monkeypatch):

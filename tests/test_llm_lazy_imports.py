@@ -30,8 +30,6 @@ def test_import_does_not_load_textual(import_target):
 
 
 _PROVIDER_CASES = [
-    (ApiType.GITHUB_COPILOT, "CopilotProvider"),
-    (ApiType.GITHUB_COPILOT_RESPONSES, "CopilotResponsesProvider"),
     (ApiType.OPENAI_RESPONSES, "OpenAIResponsesProvider"),
     (ApiType.OPENAI_COMPLETIONS, "OpenAICompletionsProvider"),
 ]

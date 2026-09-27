@@ -2,7 +2,7 @@
 config_version = 6
 
 [llm]
-default_provider = "zhipu" # "zhipu", "github-copilot", "deepseek"
+default_provider = "zhipu" # "zhipu", "deepseek", "openrouter", "openai-responses"
 default_model = "glm-5.3-flash"
 # Optional API base URL override for the selected provider or local/self-hosted endpoint.
 # Leave empty to use the provider's default URL.
@@ -72,7 +72,7 @@ collapse_thinking = true
 # Show the list of keyboard shortcuts in the welcome section on launch.
 # Set to false to hide the shortcuts panel.
 show_welcome_shortcuts = true
-# Hide models from the /model picker. Use a provider name ("github-copilot")
+# Hide models from the /model picker. Use a provider name ("openrouter")
 # to hide all its models, or "provider:model" to hide a specific model.
 # Hidden models remain usable via config defaults or session resume.
 hidden_models = []

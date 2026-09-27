@@ -75,9 +75,6 @@ echo "Setting up isolated e2e environment..."
 cleanup
 rm -rf "$TEST_DIR" "$TEST_HOME"
 mkdir -p "$TEST_DIR" "$TEST_HOME/.config/kon"
-if [ -f "$HOME/.config/kon/copilot_auth.json" ]; then
-    cp "$HOME/.config/kon/copilot_auth.json" "$TEST_HOME/.config/kon/copilot_auth.json"
-fi
 cd "$TEST_DIR" || exit 1
 printf '# Test Project\n' > README.md
 printf '{"name": "test"}\n' > config.json

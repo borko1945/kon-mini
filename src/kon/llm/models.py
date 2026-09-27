@@ -15,14 +15,12 @@ DEFAULT_MAX_TOKENS = 16384
 class ApiType(Enum):
     OPENAI_COMPLETIONS = "openai-completions"
     OPENAI_RESPONSES = "openai-responses"
-    GITHUB_COPILOT = "github-copilot"
-    GITHUB_COPILOT_RESPONSES = "github-copilot-responses"
 
 
 @dataclass
 class Model:
     id: str  # Model ID (e.g., "glm-5.3", "deepseek-flash")
-    provider: str  # "openai", "zhipu", "github-copilot"
+    provider: str  # "openai", "zhipu", "deepseek"
     api: ApiType  # Which API format to use
     base_url: str  # API endpoint
     max_tokens: int  # Max output tokens
@@ -74,46 +72,6 @@ MODELS: dict[str, Model] = {
         supports_images=False,
         supports_thinking=True,
         context_window=1000000,
-    ),
-    # GitHub Copilot models - GPT (uses Copilot Responses API)
-    "gpt-5.6-sol-copilot": Model(
-        id="gpt-5.6-sol",
-        provider="github-copilot",
-        api=ApiType.GITHUB_COPILOT_RESPONSES,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-    ),
-    "gpt-5.6-terra-copilot": Model(
-        id="gpt-5.6-terra",
-        provider="github-copilot",
-        api=ApiType.GITHUB_COPILOT_RESPONSES,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-    ),
-    "gpt-5.6-luna-copilot": Model(
-        id="gpt-5.6-luna",
-        provider="github-copilot",
-        api=ApiType.GITHUB_COPILOT_RESPONSES,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
-        context_window=372000,
-    ),
-    "gpt-5.5-copilot": Model(
-        id="gpt-5.5",
-        provider="github-copilot",
-        api=ApiType.GITHUB_COPILOT_RESPONSES,
-        base_url="https://api.individual.githubcopilot.com",
-        max_tokens=8192 * 2,
-        supports_images=True,
-        supports_thinking=True,
     ),
 }
 

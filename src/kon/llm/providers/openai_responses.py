@@ -37,21 +37,13 @@ from ..base import (
 from .openai_compat import supports_developer_role
 from .sanitize import sanitize_surrogates
 
-COPILOT_HEADERS = {
-    "User-Agent": "GitHubCopilotChat/0.35.0",
-    "Editor-Version": "vscode/1.107.0",
-    "Editor-Plugin-Version": "copilot-chat/0.35.0",
-    "Copilot-Integration-Id": "vscode-chat",
-}
-
 
 class OpenAIResponsesProvider(BaseProvider):
     name = "openai-responses"
     thinking_levels: list[str] = DEFAULT_THINKING_LEVELS
 
-    def __init__(self, config: ProviderConfig, headers: dict[str, str] | None = None):
+    def __init__(self, config: ProviderConfig):
         super().__init__(config)
-        self._headers = headers or {}
         self._client: AsyncOpenAI | None = None
 
     def _get_client(self) -> AsyncOpenAI:
@@ -59,7 +51,6 @@ class OpenAIResponsesProvider(BaseProvider):
             self._client = AsyncOpenAI(
                 api_key=self.config.api_key,
                 base_url=self.config.base_url,
-                default_headers=self._headers,
                 timeout=kon_config.llm.request_timeout_seconds,
                 http_client=make_http_client(),
             )

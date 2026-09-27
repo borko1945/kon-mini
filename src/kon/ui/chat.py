@@ -357,8 +357,6 @@ class ChatLog(VerticalScroll):
             ("/handoff", "Start focused handoff in new session"),
             ("/resume", "Resume a session"),
             ("/session", "Show session info and stats"),
-            ("/login", "Login to a provider"),
-            ("/logout", "Logout from a provider"),
             ("/export", "Export session to HTML file"),
             ("/copy", "Copy last agent response text to clipboard"),
         ]

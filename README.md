@@ -42,7 +42,7 @@ Kon is a minimal coding agent focused on a tiny core prompt, a small built-in to
   - [AGENTS.md](#agentsmd)
   - [Skills](#skills)
 - [Providers and Models](#providers-and-models)
-  - [OAuth and API keys](#oauth-and-api-keys)
+  - [API keys](#api-keys)
   - [Local models](#local-models)
 - [Permissions](#permissions)
 - [Tool binaries](#tool-binaries)
@@ -69,19 +69,19 @@ kon
 
 ```text
 usage: kon [-h] [--model MODEL]
-           [--provider {deepseek,github-copilot,openai,openai-responses,openrouter,zhipu}]
+           [--provider {deepseek,openai,openai-responses,openrouter,zhipu}]
            [--prompt [PROMPT]] [--api-key API_KEY] [--base-url BASE_URL]
            [--openai-compat-auth {auto,required,none}]
            [--anthropic-compat-auth {auto,required,none}]
            [--insecure-skip-verify] [--continue] [--resume RESUME_SESSION]
-           [--version] [--extra-tools EXTRA_TOOLS]
+           [--register-skills] [--version] [--extra-tools EXTRA_TOOLS]
 
 Kon
 
 options:
   -h, --help            show this help message and exit
   --model, -m MODEL     Model to use
-  --provider {deepseek,github-copilot,openai,openai-responses,openrouter,zhipu}
+  --provider {deepseek,openai,openai-responses,openrouter,zhipu}
                         Provider to use
   --prompt, -p [PROMPT]
                         Run a single prompt non-interactively, then exit (omit
@@ -111,7 +111,7 @@ options:
 
 ```bash
 # choose a provider and model explicitly
-kon --provider github-copilot -m gpt-5.6-sol
+kon --provider deepseek -m deepseek-flash
 
 # continue your latest session
 kon -c
@@ -214,7 +214,7 @@ Here is the full config shape:
 config_version = 6
 
 [llm]
-default_provider = "zhipu"        # "openai", "zhipu", "deepseek", "github-copilot", "openai-responses", "openrouter"
+default_provider = "zhipu"        # "openai", "zhipu", "deepseek", "openai-responses", "openrouter"
 default_model = "glm-5.3-flash"
 default_base_url = ""             # override the provider endpoint (e.g. a local server)
 default_thinking_level = "low"    # "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "ultra"
@@ -264,7 +264,7 @@ enabled = true                    # play audio when a task finishes, errors, or 
 volume = 0.5                      # 0.0 (muted) to 1.0 (full)
 ```
 
-The `ui.hidden_models` list trims the `/model` picker. Use a provider name (`"github-copilot"`) to hide every model from that provider, or `"provider:model"` (`"github-copilot:gpt-5.6-sol"`) to hide a single model. Hidden models stay usable via config defaults or session resume — they're just removed from the picker.
+The `ui.hidden_models` list trims the `/model` picker. Use a provider name (`"openrouter"`) to hide every model from that provider, or `"provider:model"` (`"openrouter:vendor/model"`) to hide a single model. Hidden models stay usable via config defaults or session resume — they're just removed from the picker.
 
 ### Core tools
 
@@ -348,8 +348,6 @@ Type `/` at the start of the input box to see available commands.
 | `/notifications` | Toggle notification sounds |
 | `/export` | Export current session to standalone HTML |
 | `/copy` | Copy the last assistant response to the clipboard |
-| `/login` | Authenticate with a supported OAuth provider |
-| `/logout` | Remove provider credentials |
 | `/clear` | Clear the current conversation |
 | `/help` | Show help and keybindings |
 | `/<custom>` | Custom skills registered as slash commands, shown in the /cmd popup for manual triggering |
@@ -542,7 +540,6 @@ Kon works with hosted models and local models exposed through an OpenAI-compatib
 
 Built-in provider support includes:
 
-- **GitHub Copilot**
 - **OpenAI Responses / OpenAI-compatible endpoints**
 - **DeepSeek**
 - **OpenRouter**
@@ -550,11 +547,10 @@ Built-in provider support includes:
 
 Use `/model` in the TUI to switch between available configured models.
 
-### OAuth and API keys
+### API keys
 
-Kon supports both OAuth login flows and direct API-key configuration.
+Providers are configured with API keys:
 
-- **GitHub Copilot OAuth**: run `/login` and choose GitHub Copilot
 - **OpenAI-compatible providers**: use `OPENAI_API_KEY` or provider-specific equivalents
   - OpenAI/default: `OPENAI_API_KEY` only
   - DeepSeek: `DEEPSEEK_API_KEY` first, then `OPENAI_API_KEY`

@@ -109,7 +109,7 @@ These directly cover the newest branch work and are mostly deterministic.
 
 | Test | What to verify |
 | --- | --- |
-| Slash menu update | `/` menu includes newer commands: `/themes`, `/permissions`, `/thinking`, `/notifications`, `/init`, `/compact`, `/handoff`, `/export`, `/copy`, `/login`, `/logout` |
+| Slash menu update | `/` menu includes newer commands: `/themes`, `/permissions`, `/thinking`, `/notifications`, `/init`, `/compact`, `/handoff`, `/export`, `/copy` |
 | `/permissions` picker | Picker opens, shows `prompt` and `auto`, current mode is checked |
 | `/permissions auto` and `/permissions prompt` | Info bar updates to `✓✓ auto` / `⏸ prompt`, status says saved, temp config persists the selected mode |
 | Shift+Tab permission cycling | Press Shift+Tab and verify permission mode toggles in the info bar and config |
@@ -186,8 +186,6 @@ Several of these can be covered with deterministic negative-state tests, even be
 | `/themes <id>` | Status/info message says theme changed and temp config persists the theme |
 | Invalid `/themes` | Shows a useful invalid-theme error |
 | `/model` picker update | Existing test should assert current checkmark and provider/no-vision labels, not just that a list appears |
-| `/login` picker | Shows GitHub Copilot and OpenAI options without needing real auth |
-| `/logout` with no creds | Shows `No providers logged in` |
 | Large paste marker | Paste large multiline/long content and verify `[paste #N +x lines]` or `[paste #N y chars]` marker appears |
 | Multiline input | Shift+Enter inserts newline; Enter submits |
 | Optional web tools launch warning | Launch with unknown `--extra-tools` and verify warning; launch with `web_search,web_fetch` and verify no unknown-tool warning |

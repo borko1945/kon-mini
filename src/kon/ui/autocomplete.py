@@ -432,8 +432,6 @@ DEFAULT_COMMANDS = [
     SlashCommand("resume", "resume a session"),
     SlashCommand("tree", "navigate session tree"),
     SlashCommand("session", "show session info and stats"),
-    SlashCommand("login", "login to a provider"),
-    SlashCommand("logout", "logout from a provider"),
     SlashCommand("export", "export session to HTML"),
     SlashCommand("copy", "copy last agent response text"),
     SlashCommand("compact", "compact current conversation now"),

@@ -3,7 +3,6 @@
 - settings.py - /settings, /themes, /permissions, /thinking, /notifications
 - models.py   - /model
 - sessions.py - /clear, /new, /resume, /tree, /session, /handoff, /compact, /export, /copy
-- auth.py     - /login, /logout
 
 CommandsMixin composes the domain mixins and owns the command router.
 """
@@ -11,14 +10,13 @@ CommandsMixin composes the domain mixins and owns the command router.
 from __future__ import annotations
 
 from ..chat import ChatLog
-from .auth import AuthCommands
 from .base import CommandSupport
 from .models import ModelCommands
 from .sessions import SessionCommands
 from .settings import SettingsCommands, SettingsSelectionResult
 
 
-class CommandsMixin(SettingsCommands, ModelCommands, SessionCommands, AuthCommands):
+class CommandsMixin(SettingsCommands, ModelCommands, SessionCommands):
     def _handle_command(self, text: str) -> bool:
         parts = text[1:].split(maxsplit=1)
         cmd = parts[0] if parts else ""
@@ -66,12 +64,6 @@ class CommandsMixin(SettingsCommands, ModelCommands, SessionCommands, AuthComman
         if cmd == "session":
             self._show_session_info()
             return True
-        if cmd == "login":
-            self._handle_login_command(args)
-            return True
-        if cmd == "logout":
-            self._handle_logout_command(args)
-            return True
         if cmd == "export":
             self._handle_export_command()
             return True
@@ -90,7 +82,6 @@ class CommandsMixin(SettingsCommands, ModelCommands, SessionCommands, AuthComman
 
 
 __all__ = [
-    "AuthCommands",
     "CommandSupport",
     "CommandsMixin",
     "ModelCommands",

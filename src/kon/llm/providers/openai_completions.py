@@ -132,12 +132,6 @@ def _detect_compat(provider: str, base_url: str, model: str = "") -> OpenAICompl
 class OpenAICompletionsProvider(BaseProvider):
     name = "openai"
     thinking_levels: list[str] = ["none", "minimal", "low", "medium", "high", "xhigh"]  # noqa: RUF012
-    # Whether to send reasoning_effort param. Some providers (e.g. Copilot)
-    # enable thinking server-side and don't accept this parameter.
-    supports_reasoning_effort: bool = True
-    # Copilot requires assistant content as string, not array.
-    # Sending as array causes Claude models to re-answer all previous prompts.
-    force_string_assistant_content: bool = False
 
     def __init__(self, config: ProviderConfig):
         super().__init__(config)
@@ -237,12 +231,7 @@ class OpenAICompletionsProvider(BaseProvider):
                     create_kwargs["reasoning_effort"] = mapped_effort
         elif compat.thinking_format in {"qwen", "llama_gemma"}:
             extra_body["enable_thinking"] = bool(thinking_level and thinking_level != "none")
-        elif (
-            self.supports_reasoning_effort
-            and compat.supports_reasoning_effort
-            and thinking_level
-            and thinking_level != "none"
-        ):
+        elif compat.supports_reasoning_effort and thinking_level and thinking_level != "none":
             create_kwargs["reasoning_effort"] = thinking_level
 
         if extra_body:
@@ -430,14 +419,7 @@ class OpenAICompletionsProvider(BaseProvider):
                     }
                 )
 
-        # Copilot requires assistant content as a string, not an array.
-        # Sending as array causes Claude models to re-answer all previous prompts.
-        if self.force_string_assistant_content:
-            content: Any = "".join(content_parts) if content_parts else None
-        else:
-            content = (
-                [{"type": "text", "text": t} for t in content_parts] if content_parts else None
-            )
+        content = [{"type": "text", "text": t} for t in content_parts] if content_parts else None
 
         result: dict[str, Any] = {"role": "assistant", "content": content}
 
