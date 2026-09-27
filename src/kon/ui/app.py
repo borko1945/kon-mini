@@ -35,6 +35,7 @@ from ..context.skills import (
     merge_registered_skills,
     render_skill_prompt,
 )
+from ..debug_trace import trace
 from ..llm import BaseProvider
 from ..llm.base import AuthMode
 from ..permissions import ApprovalResponse
@@ -723,6 +724,7 @@ class Kon(
             return
 
         self._is_running = True
+        trace("prompt-submitted", f"chars={len(query_text)}")
         # Immediate feedback: show the waiting state synchronously so the user
         # knows the input was received, before any worker/IO latency.
         self.query_one("#status-line", StatusLine).set_status("waiting")

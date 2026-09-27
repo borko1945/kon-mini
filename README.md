@@ -46,6 +46,7 @@ Kon is a minimal coding agent focused on a tiny core prompt, a small built-in to
   - [Local models](#local-models)
 - [Permissions](#permissions)
 - [Tool binaries](#tool-binaries)
+- [Tracing slow turns](#tracing-slow-turns)
 - [Documentation](#documentation)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -604,6 +605,27 @@ Kon depends on a few fast CLI tools for file discovery and search:
 - **[`ripgrep`](https://github.com/BurntSushi/ripgrep)** - required for fast content search
 
 If `fd` or `rg` are missing, Kon can download them automatically.
+
+---
+
+### Tracing slow turns
+
+If the first token takes a few seconds to show up, set `KON_DEBUG_TIMING` to a file path and Kon will append one line per phase of every request:
+
+```bash
+KON_DEBUG_TIMING=/tmp/kon-timing.log kon
+```
+
+```text
+19:57:35.061             request-start turn=1 messages=1
+19:57:35.412 +  350.9ms request-opened
+19:57:36.980 + 1568.4ms first-think ThinkPart
+19:57:40.113 + 3133.1ms first-text TextPart
+```
+
+- `request-start` → `request-opened`: DNS, TCP/TLS setup, and the provider accepting the request.
+- `request-opened` → `first-think`: the model is reasoning. Lower `default_thinking_level` (or press `ctrl+t`) if you want a faster answer on simple prompts.
+- `request-opened` → `first-text` with no `first-think`: the provider is holding the response back before streaming.
 
 ---
 

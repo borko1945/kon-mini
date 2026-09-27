@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from kon import config
 
 from ..core.types import ImageContent, StopReason, ToolResultMessage
+from ..debug_trace import trace
 from ..events import (
     AgentEndEvent,
     AgentStartEvent,
@@ -108,6 +109,7 @@ class AgentRunnerMixin:
             return
         current_prompt = prompt
         current_images = images
+        trace("agent-run-start", f"prompt_chars={len(prompt)}")
 
         while True:
             was_interrupted = False
@@ -191,6 +193,7 @@ class AgentRunnerMixin:
             return
         self._stream_started = True
         status.set_status("working")
+        trace("first-visible-delta")
 
     async def _render_agent_event(
         self, event: object, chat: ChatLog, status: StatusLine, info_bar: InfoBar

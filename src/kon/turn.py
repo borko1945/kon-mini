@@ -53,6 +53,7 @@ from .core.types import (
     ToolResult,
     ToolResultMessage,
 )
+from .debug_trace import trace
 from .events import (
     ErrorEvent,
     InterruptedEvent,
@@ -312,6 +313,10 @@ class _TurnRunner:
         self._stop_reason: StopReason = StopReason.STOP
         self._interrupted = False
 
+        # Set when response headers arrive, so chunk timings are relative to the
+        # moment the request was actually opened.
+        self._stream_opened_at = 0.0
+
     async def run(self) -> AsyncIterator[StreamEvent]:
         if self._is_cancelled():
             for event in self._interrupted_turn_end():
@@ -355,10 +360,14 @@ class _TurnRunner:
                     yield event
                 return
 
+            request_started = trace(
+                "request-start", f"turn={self._turn} messages={len(self._messages)}"
+            )
             try:
                 self._stream = await self._provider.stream(
                     self._messages, system_prompt=self._system_prompt, tools=tool_defs
                 )
+                self._stream_opened_at = trace("request-opened", started_at=request_started)
                 return
             except Exception as e:
                 if self._provider.should_retry_for_error(e) and delay is not None:
@@ -393,6 +402,8 @@ class _TurnRunner:
             asyncio.create_task(self._cancel_event.wait()) if self._cancel_event else None
         )
         tool_call_timeout = tool_call_idle_timeout_seconds()
+        first_chunk_at = self._stream_opened_at
+        seen_chunk: set[str] = set()
 
         try:
             while True:
@@ -412,6 +423,15 @@ class _TurnRunner:
                     else None
                 )
                 outcome, chunk = await self._next_chunk(stream_iter, cancel_task, chunk_timeout)
+
+                if outcome is _ChunkOutcome.CHUNK and first_chunk_at:
+                    kind = type(chunk).__name__
+                    if kind not in seen_chunk:
+                        seen_chunk.add(kind)
+                        label = {"ThinkPart": "first-think", "TextPart": "first-text"}.get(
+                            kind, "first-chunk"
+                        )
+                        trace(label, kind, started_at=first_chunk_at)
 
                 if outcome is _ChunkOutcome.STALLED:
                     await _close_stream(self._stream)
