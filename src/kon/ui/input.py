@@ -152,12 +152,19 @@ class Kon(TextArea):
         paste_debug_log(
             "paste-event",
             f"focused={type(focused).__name__ if focused else None} "
-            f"forwarded={event.is_forwarded} text={event.text[:120]!r}",
+            f"forwarded={event.is_forwarded} text={event.text[:120]!r} "
+            f"text_len={len(event.text)}",
         )
         # Prevent TextArea._on_paste from also running on the original event.
         event.prevent_default()
         transformed = self._on_paste_transform(event.text)
+        paste_debug_log(
+            "paste-transform",
+            f"input={event.text[:120]!r} output={transformed[:120]!r} "
+            f"output_len={len(transformed)}",
+        )
         await super()._on_paste(events.Paste(transformed))
+        paste_debug_log("paste-inserted", f"textarea_text={self.text[:120]!r}")
 
     def get_line(self, line_index: int):
         line = super().get_line(line_index)
@@ -371,6 +378,7 @@ class InputBox(Vertical):
             self._reset_pastes()
 
     def insert(self, text: str) -> None:
+        paste_debug_log("insert", f"text={text[:200]!r} text_len={len(text)}")
         self.query_one("#input-textarea", TextArea).insert(text)
 
     def focus(self, scroll_visible: bool = True) -> InputBox:
@@ -415,18 +423,16 @@ class InputBox(Vertical):
             self._tab_base_fragment = ""
 
     def _transform_paste(self, pasted_text: str) -> str:
+        paste_debug_log("transform-in", f"raw={pasted_text[:200]!r} raw_len={len(pasted_text)}")
         normalized = pasted_text.replace("\r\n", "\n").replace("\r", "\n")
         filtered = "".join(char for char in normalized if char == "\n" or ord(char) >= 32)
-
-        image_path = self._pasted_image_path(filtered)
-        if image_path is not None:
-            try:
-                return self._attach_image(image_path)
-            except (OSError, ValueError):
-                pass
+        paste_debug_log(
+            "transform-filtered", f"filtered={filtered[:200]!r} filtered_len={len(filtered)}"
+        )
 
         line_count = len(filtered.split("\n"))
         char_count = len(filtered)
+        paste_debug_log("transform-thresholds", f"line_count={line_count} char_count={char_count}")
 
         if line_count > _PASTE_LINE_THRESHOLD or char_count > _PASTE_CHAR_THRESHOLD:
             self._paste_counter += 1
@@ -436,6 +442,7 @@ class InputBox(Vertical):
                 return f"[paste #{paste_id} +{line_count} lines]"
             return f"[paste #{paste_id} {char_count} chars]"
 
+        paste_debug_log("transform-passthrough", f"result={filtered[:200]!r}")
         return filtered
 
     def _expand_paste_markers(self, text: str) -> str:
@@ -444,20 +451,6 @@ class InputBox(Vertical):
             return self._pastes.get(paste_id, match.group(0))
 
         return _PASTE_MARKER_RE.sub(replace_match, text)
-
-    def _pasted_image_path(self, text: str) -> Path | None:
-        candidate = text.strip()
-        if candidate.startswith("file://"):
-            candidate = candidate[7:]
-        path = Path(os.path.expanduser(candidate))
-        if not path.is_absolute():
-            path = Path(self._cwd) / path
-        if not is_image_file(str(path)):
-            return None
-        try:
-            return path if path.is_file() else None
-        except OSError:
-            return None
 
     def _attach_image(self, path: Path, *, temporary: bool = False) -> str:
         data, mime_type, _ = read_and_process_image(str(path))
@@ -492,6 +485,7 @@ class InputBox(Vertical):
         self._image_counter = 0
 
     def paste_text(self, text: str) -> None:
+        paste_debug_log("paste_text", f"text={text[:200]!r} text_len={len(text)}")
         """Insert clipboard text through the same transform as terminal pastes."""
         self.insert(self._transform_paste(text))
 

@@ -90,16 +90,14 @@ def test_threshold_boundaries_not_collapsed() -> None:
     assert input_box._transform_paste(five_hundred_chars) == five_hundred_chars
 
 
-def test_pasted_image_path_creates_marker_and_attachment(tmp_path) -> None:
+def test_pasted_image_path_inserts_text_not_attachment(tmp_path) -> None:
     image_path = tmp_path / "very-long-screenshot-name.png"
     Image.new("RGB", (2, 2)).save(image_path)
     input_box = InputBox(cwd=str(tmp_path))
 
-    marker = input_box._transform_paste(str(image_path))
+    result = input_box._transform_paste(str(image_path))
 
-    assert marker == "[Image #1 very-long-s…]"
-    assert len(input_box._submission_images(marker)) == 1
-    assert input_box._strip_image_markers(f"describe {marker}") == "describe"
+    assert result == str(image_path)
 
 
 def test_submit_image_marker_sends_attachment_without_marker(tmp_path) -> None:

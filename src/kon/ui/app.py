@@ -163,6 +163,7 @@ class Kon(
         self._approval_selection: ApprovalResponse = ApprovalResponse.APPROVE
         self._hide_thinking = False
         self._fd_path: str | None = None
+        self._deferred_pastes: list[str] = []
         self._selection_mode: SelectionMode | None = None
         self._settings_active: bool = False
         self._settings_selected_value: str | None = None
@@ -317,16 +318,37 @@ class Kon(
         """Salvage paste events that bubble up unhandled (e.g. focus left the input)."""
         focused = self.focused
         if isinstance(focused, TextArea):
+            paste_debug_log(
+                "paste-salvage-skip", f"focused={type(focused).__name__} already handled"
+            )
             return  # A text area (normally the input) already consumed it.
+        if focused is None:
+            paste_debug_log("paste-deferred", f"app blurred, queuing text={event.text[:120]!r}")
+            self._deferred_pastes.append(event.text)
+            return
         try:
             input_box = self.query_one("#input-box", InputBox)
         except Exception:
             return
         paste_debug_log(
-            "paste-salvage",
-            f"focused={type(focused).__name__ if focused else None} text={event.text[:120]!r}",
+            "paste-salvage", f"focused={type(focused).__name__} text={event.text[:120]!r}"
         )
         input_box.paste_text(event.text)
+
+    def on_app_focus(self, event: events.AppFocus) -> None:
+        """Replay pastes that arrived while the app was blurred (e.g. iTerm paste dialog)."""
+        if not self._deferred_pastes:
+            return
+        paste_debug_log("app-focus-replay", f"count={len(self._deferred_pastes)}")
+        pending = self._deferred_pastes[:]
+        self._deferred_pastes.clear()
+        try:
+            input_box = self.query_one("#input-box", InputBox)
+        except Exception:
+            return
+        for text in pending:
+            paste_debug_log("app-focus-paste", f"text={text[:120]!r}")
+            input_box.paste_text(text)
 
     def _install_input_tap(self) -> None:
         """Log every event parsed from terminal input bytes (KON_DEBUG_PASTE)."""
