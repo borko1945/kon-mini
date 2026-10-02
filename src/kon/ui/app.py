@@ -322,17 +322,17 @@ class Kon(
                 "paste-salvage-skip", f"focused={type(focused).__name__} already handled"
             )
             return  # A text area (normally the input) already consumed it.
-        if focused is None:
-            paste_debug_log("paste-deferred", f"app blurred, queuing text={event.text[:120]!r}")
-            self._deferred_pastes.append(event.text)
-            return
         try:
             input_box = self.query_one("#input-box", InputBox)
         except Exception:
+            if focused is None:
+                paste_debug_log(
+                    "paste-deferred", f"no input box, queuing text={event.text[:120]!r}"
+                )
+                self._deferred_pastes.append(event.text)
             return
-        paste_debug_log(
-            "paste-salvage", f"focused={type(focused).__name__} text={event.text[:120]!r}"
-        )
+        reason = "app-blurred" if focused is None else f"focused={type(focused).__name__}"
+        paste_debug_log("paste-salvage", f"{reason} text={event.text[:120]!r}")
         input_box.paste_text(event.text)
 
     def on_app_focus(self, event: events.AppFocus) -> None:
